@@ -4,377 +4,312 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Inkflow — Manga & Manhwa Reader</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#08080f;--surface:#111118;--surface2:#181826;--surface3:#20202e;
-  --border:#252535;--border2:#333348;
-  --accent:#7c6af7;--accent2:#a594fa;--accentbg:rgba(124,106,247,0.12);
-  --text:#eeeeff;--text2:#9898b8;--text3:#555570;
-  --green:#3ecf8e;--gold:#f0a429;--red:#e05c5c;--blue:#60a5fa;
-  --r:10px;--rlg:16px;
+  --bg:#08080f;--sur:#111118;--sur2:#181826;--sur3:#20202e;
+  --bdr:#252535;--bdr2:#333348;
+  --acc:#7c6af7;--acc2:#a594fa;--accbg:rgba(124,106,247,0.12);
+  --tx:#eeeeff;--tx2:#9898b8;--tx3:#555570;
+  --grn:#3ecf8e;--gld:#f0a429;
+  --r:10px;--rl:16px;
 }
-html,body{height:100%;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden}
+html,body{min-height:100%;background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;overflow-x:hidden}
 ::-webkit-scrollbar{width:4px;height:4px}
 ::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:4px}
 
 /* topbar */
-.topbar{
-  position:sticky;top:0;z-index:100;
-  display:flex;align-items:center;gap:14px;padding:0 20px;height:58px;
-  background:rgba(8,8,15,0.92);border-bottom:1px solid var(--border);
-  backdrop-filter:blur(14px);
-}
-.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:21px;color:var(--text);cursor:pointer;text-decoration:none;flex-shrink:0;letter-spacing:-0.5px}
-.logo em{color:var(--accent);font-style:normal}
-.search-wrap{flex:1;max-width:420px;position:relative}
-#sinput{
-  width:100%;height:37px;padding:0 12px 0 36px;
-  background:var(--surface2);border:1px solid var(--border);border-radius:8px;
-  color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;
-  transition:border-color 0.2s;
-}
-#sinput:focus{border-color:var(--accent)}
-#sinput::placeholder{color:var(--text3)}
-.sicon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:15px;pointer-events:none}
-#sdrop{
-  position:absolute;top:calc(100% + 6px);left:0;right:0;
-  background:var(--surface);border:1px solid var(--border2);border-radius:var(--r);
-  overflow:hidden;max-height:380px;overflow-y:auto;z-index:200;
-  display:none;box-shadow:0 12px 40px rgba(0,0,0,0.6);
-}
-.ditem{display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;transition:background 0.15s;border-bottom:1px solid var(--border)}
-.ditem:last-child{border-bottom:none}
-.ditem:hover{background:var(--surface2)}
-.dthumb{width:34px;height:48px;object-fit:cover;border-radius:4px;flex-shrink:0;background:var(--surface2)}
-.dinfo p{font-size:13px;font-weight:500;line-height:1.3;color:var(--text)}
-.dinfo small{font-size:11px;color:var(--text3)}
-.nav-tabs{display:flex;gap:2px;margin-left:auto}
-.ntab{padding:6px 13px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text2);transition:all 0.15s;border:none;background:none;font-family:'DM Sans',sans-serif}
-.ntab:hover{color:var(--text);background:var(--surface2)}
-.ntab.on{color:var(--accent2);background:var(--accentbg)}
-
-/* source selector */
-.source-bar{display:flex;align-items:center;gap:8px;padding:10px 20px 0;flex-wrap:wrap}
-.src-btn{padding:5px 14px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text2);transition:all 0.15s;flex-shrink:0}
-.src-btn:hover{border-color:var(--border2);color:var(--text)}
-.src-btn.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.src-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px}
+.bar{position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:14px;padding:0 20px;height:56px;background:rgba(8,8,15,0.94);border-bottom:1px solid var(--bdr);backdrop-filter:blur(14px)}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--tx);cursor:pointer;text-decoration:none;letter-spacing:-.5px;flex-shrink:0}
+.logo em{color:var(--acc);font-style:normal}
+.sw{flex:1;max-width:420px;position:relative}
+#si{width:100%;height:36px;padding:0 12px 0 34px;background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;transition:border-color .2s}
+#si:focus{border-color:var(--acc)}
+#si::placeholder{color:var(--tx3)}
+.sico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx3);font-size:14px;pointer-events:none}
+#sd{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--r);overflow:hidden;max-height:380px;overflow-y:auto;z-index:200;display:none;box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.di{display:flex;align-items:center;gap:10px;padding:10px 13px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--bdr)}
+.di:last-child{border-bottom:none}
+.di:hover{background:var(--sur2)}
+.dth{width:32px;height:46px;object-fit:cover;border-radius:4px;flex-shrink:0;background:var(--sur2)}
+.din p{font-size:13px;font-weight:500;line-height:1.3;color:var(--tx)}
+.din small{font-size:11px;color:var(--tx3)}
+.ntabs{display:flex;gap:2px;margin-left:auto}
+.nt{padding:5px 13px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx2);transition:all .15s;border:none;background:none;font-family:'DM Sans',sans-serif}
+.nt:hover{color:var(--tx);background:var(--sur2)}
+.nt.on{color:var(--acc2);background:var(--accbg)}
 
 /* main */
-main{padding:22px 20px}
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-.sec-title{font-family:'Syne',sans-serif;font-weight:700;font-size:17px}
-.seeall{font-size:12px;color:var(--accent2);cursor:pointer;text-decoration:none;opacity:0.8;transition:opacity 0.15s}
-.seeall:hover{opacity:1}
+main{padding:20px 20px}
+.sech{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sect{font-family:'Syne',sans-serif;font-weight:700;font-size:17px}
+.sa{font-size:12px;color:var(--acc2);cursor:pointer;opacity:.8;transition:opacity .15s;text-decoration:none}
+.sa:hover{opacity:1}
 
 /* grid */
-.mgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:13px;margin-bottom:32px}
-@media(max-width:960px){.mgrid{grid-template-columns:repeat(4,1fr)}}
-@media(max-width:640px){.mgrid{grid-template-columns:repeat(3,1fr)}}
+.grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:28px}
+@media(max-width:960px){.grid{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:600px){.grid{grid-template-columns:repeat(3,1fr)}}
 
 /* card */
-.mcard{cursor:pointer}
-.mcard-inner{border-radius:var(--r);overflow:hidden;aspect-ratio:2/3;background:var(--surface2);position:relative;border:1px solid var(--border);transition:border-color 0.2s,transform 0.2s}
-.mcard:hover .mcard-inner{border-color:var(--accent);transform:translateY(-3px)}
-.mcard img{width:100%;height:100%;object-fit:cover;display:block}
-.mcard-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(4,4,10,0.95) 0%,rgba(4,4,10,0.3) 55%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:9px}
-.mcard-ttl{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:#fff;line-height:1.3;margin-bottom:4px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;letter-spacing:0.2px}
-.bm{background:rgba(124,106,247,0.22);color:#a594fa;border:1px solid rgba(124,106,247,0.35)}
-.bmh{background:rgba(62,207,142,0.15);color:#3ecf8e;border:1px solid rgba(62,207,142,0.3)}
-.bmc{background:rgba(240,164,41,0.15);color:#f0a429;border:1px solid rgba(240,164,41,0.3)}
-.bw{background:rgba(96,165,250,0.15);color:#60a5fa;border:1px solid rgba(96,165,250,0.3)}
-.bsrc{background:rgba(255,255,255,0.07);color:var(--text3);border:1px solid rgba(255,255,255,0.1)}
+.mc{cursor:pointer}
+.mci{border-radius:var(--r);overflow:hidden;aspect-ratio:2/3;background:var(--sur2);position:relative;border:1px solid var(--bdr);transition:border-color .2s,transform .2s}
+.mc:hover .mci{border-color:var(--acc);transform:translateY(-3px)}
+.mc img{width:100%;height:100%;object-fit:cover;display:block}
+.mov{position:absolute;inset:0;background:linear-gradient(to top,rgba(4,4,10,.95) 0%,rgba(4,4,10,.25) 55%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:8px}
+.mtt{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:#fff;line-height:1.3;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600}
+.bm{background:rgba(124,106,247,.22);color:#a594fa;border:1px solid rgba(124,106,247,.35)}
+.bmh{background:rgba(62,207,142,.15);color:#3ecf8e;border:1px solid rgba(62,207,142,.3)}
+.bmc{background:rgba(240,164,41,.15);color:#f0a429;border:1px solid rgba(240,164,41,.3)}
 
-/* updates list */
-.ulist{display:flex;flex-direction:column;gap:7px}
-.urow{display:flex;align-items:center;gap:12px;padding:9px 13px;border-radius:var(--r);background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:border-color 0.2s,background 0.2s}
-.urow:hover{border-color:var(--border2);background:var(--surface2)}
-.uthumb{width:40px;height:55px;object-fit:cover;border-radius:5px;flex-shrink:0;background:var(--surface2)}
-.uinfo{flex:1;min-width:0}
-.uttl{font-weight:500;font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.uch{font-size:12px;color:var(--accent2);margin-top:2px}
-.utime{font-size:11px;color:var(--text3);flex-shrink:0;text-align:right}
-.usrc-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px}
+/* updates */
+.ul{display:flex;flex-direction:column;gap:6px}
+.ur{display:flex;align-items:center;gap:12px;padding:9px 13px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bdr);cursor:pointer;transition:border-color .2s,background .2s}
+.ur:hover{border-color:var(--bdr2);background:var(--sur2)}
+.uth{width:38px;height:53px;object-fit:cover;border-radius:5px;flex-shrink:0;background:var(--sur2)}
+.ui{flex:1;min-width:0}
+.utt{font-weight:500;font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uc{font-size:12px;color:var(--acc2);margin-top:1px}
+.ut{font-size:11px;color:var(--tx3);flex-shrink:0}
 
 /* detail */
-#dpage{display:none}
-.dhero{display:flex;gap:24px;margin-bottom:28px}
-.dcover{width:170px;flex-shrink:0;border-radius:var(--rlg);overflow:hidden;border:1px solid var(--border);aspect-ratio:2/3;background:var(--surface2)}
-.dcover img{width:100%;height:100%;object-fit:cover}
-.dinfo{flex:1;min-width:0}
-.dtitle{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;line-height:1.2;margin-bottom:8px}
-.dmeta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-.ddesc{font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:14px;max-height:110px;overflow-y:auto}
-.dbtns{display:flex;gap:8px;flex-wrap:wrap}
-.dbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s;border:1px solid var(--border2);color:var(--text2);background:var(--surface2)}
-.dbtn.pri{background:var(--accent);border-color:var(--accent);color:#fff}
-.dbtn.pri:hover{background:#6c5ae0}
-.dbtn:hover:not(.pri){border-color:var(--accent);color:var(--accent2);background:var(--accentbg)}
-
-/* chapters */
-.ch-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.ch-ttl{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
-.sort-btn{padding:5px 11px;border-radius:6px;font-size:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
-.sort-btn:hover{border-color:var(--border2);color:var(--text)}
-.chlist{display:flex;flex-direction:column;gap:3px;max-height:400px;overflow-y:auto;padding-right:4px}
-.chrow{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:7px;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:border-color 0.15s,background 0.15s}
-.chrow:hover{border-color:var(--accent);background:var(--surface2)}
-.chnum{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--accent2);min-width:70px}
-.chtit{flex:1;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chdate{font-size:11px;color:var(--text3);flex-shrink:0}
-.chsrc{font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:2px 5px;color:var(--text3);flex-shrink:0}
+#dp{display:none}
+.dh{display:flex;gap:22px;margin-bottom:26px}
+.dcv{width:160px;flex-shrink:0;border-radius:var(--rl);overflow:hidden;border:1px solid var(--bdr);aspect-ratio:2/3;background:var(--sur2)}
+.dcv img{width:100%;height:100%;object-fit:cover}
+.din2{flex:1;min-width:0}
+.dtt{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;line-height:1.2;margin-bottom:7px}
+.dm{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px}
+.dd{font-size:13px;color:var(--tx2);line-height:1.7;margin-bottom:13px;max-height:105px;overflow-y:auto}
+.dbs{display:flex;gap:7px;flex-wrap:wrap}
+.db{display:inline-flex;align-items:center;gap:5px;padding:7px 15px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;border:1px solid var(--bdr2);color:var(--tx2);background:var(--sur2)}
+.db.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.db.p:hover{background:#6c5ae0}
+.db:hover:not(.p){border-color:var(--acc);color:var(--acc2);background:var(--accbg)}
+.chh{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+.cht{font-family:'Syne',sans-serif;font-weight:700;font-size:15px}
+.sb{padding:5px 11px;border-radius:6px;font-size:12px;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.sb:hover{border-color:var(--bdr2);color:var(--tx)}
+.chl{display:flex;flex-direction:column;gap:3px;max-height:400px;overflow-y:auto;padding-right:4px}
+.cr{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:7px;background:var(--sur);border:1px solid var(--bdr);cursor:pointer;transition:border-color .15s,background .15s}
+.cr:hover{border-color:var(--acc);background:var(--sur2)}
+.cn{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--acc2);min-width:70px}
+.ctit{flex:1;font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cd{font-size:11px;color:var(--tx3);flex-shrink:0}
 
 /* reader */
-#rpage{display:none;background:var(--bg);min-height:100vh}
-.rtbar{display:flex;align-items:center;gap:10px;padding:0 14px;height:50px;background:rgba(8,8,15,0.93);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;backdrop-filter:blur(10px)}
-.rbk{display:flex;align-items:center;gap:5px;color:var(--text2);cursor:pointer;font-size:13px;border:none;background:none;font-family:'DM Sans',sans-serif;transition:color 0.15s;padding:0}
-.rbk:hover{color:var(--text)}
+#rp{display:none;background:var(--bg);min-height:100vh}
+.rtb{display:flex;align-items:center;gap:10px;padding:0 14px;height:50px;background:rgba(8,8,15,.94);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:50;backdrop-filter:blur(10px)}
+.rbk{display:flex;align-items:center;gap:5px;color:var(--tx2);cursor:pointer;font-size:13px;border:none;background:none;font-family:'DM Sans',sans-serif;transition:color .15s;padding:0}
+.rbk:hover{color:var(--tx)}
 .rttl{font-family:'Syne',sans-serif;font-weight:600;font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rchi{font-size:12px;color:var(--text3);flex-shrink:0}
-.mtogg{display:flex;background:var(--surface2);border-radius:6px;border:1px solid var(--border);overflow:hidden}
-.mbtn{padding:5px 11px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text3);font-family:'DM Sans',sans-serif;transition:all 0.15s}
-.mbtn.on{background:var(--accent);color:#fff}
-.rnavs{display:flex;gap:3px}
-.rnbtn{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:500;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.15s}
-.rnbtn:hover:not(:disabled){border-color:var(--accent);color:var(--accent2)}
-.rnbtn:disabled{opacity:0.3;cursor:not-allowed}
+.rci{font-size:12px;color:var(--tx3);flex-shrink:0}
+.mtg{display:flex;background:var(--sur2);border-radius:6px;border:1px solid var(--bdr);overflow:hidden}
+.mb{padding:5px 11px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--tx3);font-family:'DM Sans',sans-serif;transition:all .15s}
+.mb.on{background:var(--acc);color:#fff}
+.rnv{display:flex;gap:3px}
+.rn{padding:5px 11px;border-radius:6px;font-size:12px;font-weight:500;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s}
+.rn:hover:not(:disabled){border-color:var(--acc);color:var(--acc2)}
+.rn:disabled{opacity:.3;cursor:not-allowed}
+#sr{padding:12px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.spage{width:100%;max-width:800px;display:block;background:var(--sur)}
+#pr{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 50px);padding:12px}
+.pw{position:relative;max-width:800px;width:100%}
+#pi{width:100%;display:block;background:var(--sur);min-height:400px}
+.pn{position:absolute;top:0;bottom:0;width:40%;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s}
+.pn:hover{opacity:1}
+.pnl{left:0;background:linear-gradient(to right,rgba(0,0,0,.28),transparent)}
+.pnr{right:0;background:linear-gradient(to left,rgba(0,0,0,.28),transparent)}
+.pa{font-size:30px;color:rgba(255,255,255,.75)}
+.pc{text-align:center;margin-top:8px;font-size:12px;color:var(--tx3)}
 
-#scroll-r{padding:14px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.spage{width:100%;max-width:800px;display:block;background:var(--surface)}
-#page-r{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 50px);padding:14px}
-.pimgw{position:relative;max-width:800px;width:100%}
-#pimg{width:100%;display:block;background:var(--surface);min-height:400px}
-.pnov{position:absolute;top:0;bottom:0;width:40%;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity 0.15s}
-.pnov:hover{opacity:1}
-.pnov-l{left:0;background:linear-gradient(to right,rgba(0,0,0,0.28),transparent)}
-.pnov-r{right:0;background:linear-gradient(to left,rgba(0,0,0,0.28),transparent)}
-.parr{font-size:30px;color:rgba(255,255,255,0.75)}
-.pcnt{text-align:center;margin-top:9px;font-size:12px;color:var(--text3)}
+/* genre bar */
+.gb{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;scrollbar-width:none}
+.gb::-webkit-scrollbar{display:none}
+.gc{padding:4px 13px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;border:1px solid var(--bdr);background:var(--sur);color:var(--tx2)}
+.gc:hover{border-color:var(--bdr2);color:var(--tx)}
+.gc.on{background:var(--acc);border-color:var(--acc);color:#fff}
 
 /* tabs */
-.tabbar{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px}
-.tab{padding:9px 18px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.15s;border-top:none;border-left:none;border-right:none;background:none;font-family:'DM Sans',sans-serif}
-.tab:hover{color:var(--text2)}
-.tab.on{color:var(--accent2);border-bottom-color:var(--accent)}
-
-/* genre */
-.gbar{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:18px;scrollbar-width:none}
-.gbar::-webkit-scrollbar{display:none}
-.gchip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;transition:all 0.15s;flex-shrink:0;border:1px solid var(--border);background:var(--surface);color:var(--text2)}
-.gchip:hover{border-color:var(--border2);color:var(--text)}
-.gchip.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.tbar{display:flex;border-bottom:1px solid var(--bdr);margin-bottom:18px}
+.tab{padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;border-top:none;border-left:none;border-right:none;background:none;font-family:'DM Sans',sans-serif}
+.tab:hover{color:var(--tx2)}
+.tab.on{color:var(--acc2);border-bottom-color:var(--acc)}
 
 /* util */
-.spin{display:inline-block;width:22px;height:22px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:sp 0.7s linear infinite}
+.spin{display:inline-block;width:20px;height:20px;border:2px solid var(--bdr2);border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
-.ldwrap{display:flex;align-items:center;justify-content:center;gap:10px;padding:40px;color:var(--text3);font-size:13px}
-.empty{text-align:center;padding:50px 20px;color:var(--text3);font-size:13px}
-.bkbtn{display:inline-flex;align-items:center;gap:5px;margin-bottom:18px;font-size:13px;color:var(--text2);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color 0.15s;padding:0}
-.bkbtn:hover{color:var(--accent2)}
+.lw{display:flex;align-items:center;justify-content:center;gap:10px;padding:36px;color:var(--tx3);font-size:13px}
+.emp{text-align:center;padding:48px 20px;color:var(--tx3);font-size:13px}
+.bk{display:inline-flex;align-items:center;gap:5px;margin-bottom:16px;font-size:13px;color:var(--tx2);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color .15s;padding:0}
+.bk:hover{color:var(--acc2)}
 @keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
-.shim{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 50%,var(--surface2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
-
-/* source color dots */
-.dot-md{background:#7c6af7}
-.dot-ck{background:#3ecf8e}
-.dot-mp{background:#f0a429}
-.dot-kl{background:#60a5fa}
+.shim{background:linear-gradient(90deg,var(--sur2) 25%,var(--sur3) 50%,var(--sur2) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite}
 </style>
 </head>
 <body>
 
-<!-- TOPBAR -->
-<nav class="topbar">
-  <a class="logo" href="#" onclick="showHome();return false;">Ink<em>flow</em></a>
-  <div class="search-wrap">
-    <span class="sicon">🔍</span>
-    <input id="sinput" type="text" placeholder="Search manga, manhwa, manhua…" autocomplete="off">
-    <div id="sdrop"></div>
+<nav class="bar">
+  <a class="logo" href="#" onclick="goHome();return false;">Ink<em>flow</em></a>
+  <div class="sw">
+    <span class="sico">🔍</span>
+    <input id="si" type="text" placeholder="Search manga, manhwa, manhua…" autocomplete="off">
+    <div id="sd"></div>
   </div>
-  <div class="nav-tabs">
-    <button class="ntab on" onclick="switchTab('home',this)">Home</button>
-    <button class="ntab" onclick="switchTab('browse',this)">Browse</button>
-    <button class="ntab" onclick="switchTab('updates',this)">Updates</button>
+  <div class="ntabs">
+    <button class="nt on" onclick="switchTab('home',this)">Home</button>
+    <button class="nt" onclick="switchTab('browse',this)">Browse</button>
+    <button class="nt" onclick="switchTab('updates',this)">Updates</button>
   </div>
 </nav>
 
-<!-- SOURCE BAR -->
-<div class="source-bar" id="srcbar">
-  <span class="src-label">Sources:</span>
-  <button class="src-btn on" onclick="toggleSrc('md',this)" title="MangaDex">MangaDex</button>
-  <button class="src-btn on" onclick="toggleSrc('ck',this)" title="Comick">Comick</button>
-  <button class="src-btn" onclick="toggleSrc('mp',this)" title="MangaPill (proxy)">MangaPill</button>
-</div>
-
 <!-- HOME -->
-<div id="hpage">
+<div id="hp">
   <main>
-    <div class="tabbar">
+    <div class="tbar">
       <button class="tab on" onclick="htab('popular',this)">🔥 Popular</button>
-      <button class="tab" onclick="htab('new',this)">🕐 New</button>
+      <button class="tab" onclick="htab('new',this)">🕐 New Releases</button>
       <button class="tab" onclick="htab('top',this)">⭐ Top Rated</button>
     </div>
-    <div class="sec-hdr"><h2 class="sec-title">Featured</h2></div>
-    <div id="hgrid" class="mgrid"><div class="ldwrap"><div class="spin"></div> Loading…</div></div>
-    <div class="sec-hdr" style="margin-top:30px">
-      <h2 class="sec-title">Latest Updates</h2>
-      <a class="seeall" href="#" onclick="switchToUpdates();return false;">See all →</a>
+    <div class="sech"><h2 class="sect">Featured</h2></div>
+    <div id="hg" class="grid"><div class="lw"><div class="spin"></div> Loading…</div></div>
+    <div class="sech" style="margin-top:26px">
+      <h2 class="sect">Latest Updates</h2>
+      <a class="sa" href="#" onclick="toUpdates();return false;">See all →</a>
     </div>
-    <div id="hupdates" class="ulist"><div class="ldwrap"><div class="spin"></div> Loading…</div></div>
+    <div id="hu" class="ul"><div class="lw"><div class="spin"></div> Loading…</div></div>
   </main>
 </div>
 
 <!-- BROWSE -->
-<div id="bpage" style="display:none">
+<div id="bp" style="display:none">
   <main>
-    <div class="gbar" id="gbar">
-      <span class="gchip on" onclick="filterG('',this)">All</span>
-      <span class="gchip" onclick="filterG('Action',this)">Action</span>
-      <span class="gchip" onclick="filterG('Adventure',this)">Adventure</span>
-      <span class="gchip" onclick="filterG('Comedy',this)">Comedy</span>
-      <span class="gchip" onclick="filterG('Drama',this)">Drama</span>
-      <span class="gchip" onclick="filterG('Fantasy',this)">Fantasy</span>
-      <span class="gchip" onclick="filterG('Horror',this)">Horror</span>
-      <span class="gchip" onclick="filterG('Mystery',this)">Mystery</span>
-      <span class="gchip" onclick="filterG('Romance',this)">Romance</span>
-      <span class="gchip" onclick="filterG('Sci-Fi',this)">Sci-Fi</span>
-      <span class="gchip" onclick="filterG('Slice of Life',this)">Slice of Life</span>
-      <span class="gchip" onclick="filterG('Sports',this)">Sports</span>
-      <span class="gchip" onclick="filterG('Supernatural',this)">Supernatural</span>
+    <div class="gb">
+      <span class="gc on" onclick="gfilt('',this)">All</span>
+      <span class="gc" onclick="gfilt('Action',this)">Action</span>
+      <span class="gc" onclick="gfilt('Adventure',this)">Adventure</span>
+      <span class="gc" onclick="gfilt('Comedy',this)">Comedy</span>
+      <span class="gc" onclick="gfilt('Drama',this)">Drama</span>
+      <span class="gc" onclick="gfilt('Fantasy',this)">Fantasy</span>
+      <span class="gc" onclick="gfilt('Horror',this)">Horror</span>
+      <span class="gc" onclick="gfilt('Mystery',this)">Mystery</span>
+      <span class="gc" onclick="gfilt('Romance',this)">Romance</span>
+      <span class="gc" onclick="gfilt('Sci-Fi',this)">Sci-Fi</span>
+      <span class="gc" onclick="gfilt('Slice of Life',this)">Slice of Life</span>
+      <span class="gc" onclick="gfilt('Sports',this)">Sports</span>
+      <span class="gc" onclick="gfilt('Supernatural',this)">Supernatural</span>
+      <span class="gc" onclick="gfilt('Thriller',this)">Thriller</span>
     </div>
-    <div id="bgrid" class="mgrid"><div class="ldwrap"><div class="spin"></div> Loading…</div></div>
-    <div id="bmore" style="text-align:center;margin-top:20px;display:none">
-      <button class="dbtn" onclick="browseMore()">Load more</button>
+    <div id="bg" class="grid"><div class="lw"><div class="spin"></div> Loading…</div></div>
+    <div id="bmore" style="text-align:center;margin-top:18px;display:none">
+      <button class="db" onclick="browseMore()">Load more</button>
     </div>
   </main>
 </div>
 
 <!-- UPDATES -->
-<div id="upage" style="display:none">
+<div id="up" style="display:none">
   <main>
-    <div class="sec-hdr">
-      <h2 class="sec-title">Latest Chapter Updates</h2>
-      <button class="dbtn" style="font-size:12px;padding:5px 13px" onclick="loadUpdates()">↺ Refresh</button>
+    <div class="sech">
+      <h2 class="sect">Latest Chapter Updates</h2>
+      <button class="db" style="font-size:12px;padding:5px 12px" onclick="loadUpdates()">↺ Refresh</button>
     </div>
-    <div id="ulist" class="ulist"><div class="ldwrap"><div class="spin"></div> Loading…</div></div>
+    <div id="ul" class="ul"><div class="lw"><div class="spin"></div> Loading…</div></div>
   </main>
 </div>
 
-<!-- DETAIL PAGE -->
-<div id="dpage">
+<!-- DETAIL -->
+<div id="dp">
   <main>
-    <button class="bkbtn" onclick="goBack()">← Back</button>
-    <div class="dhero">
-      <div class="dcover"><img id="dcov" src="" alt=""></div>
-      <div class="dinfo">
-        <h1 class="dtitle" id="dttl">Loading…</h1>
-        <div class="dmeta" id="dmeta"></div>
-        <p class="ddesc" id="ddesc"></p>
-        <div class="dbtns" id="dbtns"></div>
+    <button class="bk" onclick="goBack()">← Back</button>
+    <div class="dh">
+      <div class="dcv"><img id="dcv" src="" alt=""></div>
+      <div class="din2">
+        <h1 class="dtt" id="dtt">Loading…</h1>
+        <div class="dm" id="dm"></div>
+        <p class="dd" id="dd"></p>
+        <div class="dbs" id="dbs"></div>
       </div>
     </div>
-    <div class="ch-hdr">
-      <span class="ch-ttl" id="chttl">Chapters</span>
-      <button class="sort-btn" onclick="togSort()" id="sbtn">↑ Newest first</button>
+    <div class="chh">
+      <span class="cht" id="cht">Chapters</span>
+      <button class="sb" onclick="togSort()" id="sb">↑ Newest first</button>
     </div>
-    <div id="chlist" class="chlist"><div class="ldwrap"><div class="spin"></div> Loading chapters…</div></div>
+    <div id="chl" class="chl"><div class="lw"><div class="spin"></div> Loading…</div></div>
   </main>
 </div>
 
 <!-- READER -->
-<div id="rpage">
-  <div class="rtbar">
+<div id="rp">
+  <div class="rtb">
     <button class="rbk" onclick="closeReader()">← Back</button>
     <span class="rttl" id="rttl">—</span>
-    <span class="rchi" id="rchi"></span>
-    <div class="mtogg">
-      <button class="mbtn on" id="ms" onclick="setMode('scroll')">Scroll</button>
-      <button class="mbtn" id="mp2" onclick="setMode('page')">Pages</button>
+    <span class="rci" id="rci"></span>
+    <div class="mtg">
+      <button class="mb on" id="ms" onclick="setMode('scroll')">Scroll</button>
+      <button class="mb" id="mpg" onclick="setMode('page')">Pages</button>
     </div>
-    <div class="rnavs">
-      <button class="rnbtn" id="pbtn" onclick="navCh(-1)">‹ Prev</button>
-      <button class="rnbtn" id="nbtn" onclick="navCh(1)">Next ›</button>
+    <div class="rnv">
+      <button class="rn" id="pb" onclick="navCh(-1)">‹ Prev</button>
+      <button class="rn" id="nb" onclick="navCh(1)">Next ›</button>
     </div>
   </div>
-  <div id="scroll-r"></div>
-  <div id="page-r" style="display:none">
-    <div class="pimgw">
-      <img id="pimg" src="" alt="Page">
-      <div class="pnov pnov-l" onclick="prevPg()"><span class="parr">‹</span></div>
-      <div class="pnov pnov-r" onclick="nextPg()"><span class="parr">›</span></div>
+  <div id="sr"></div>
+  <div id="pr" style="display:none">
+    <div class="pw">
+      <img id="pi" src="" alt="Page">
+      <div class="pn pnl" onclick="prevPg()"><span class="pa">‹</span></div>
+      <div class="pn pnr" onclick="nextPg()"><span class="pa">›</span></div>
     </div>
-    <p class="pcnt" id="pcnt"></p>
+    <p class="pc" id="pc"></p>
   </div>
-  <div id="rld" class="ldwrap" style="display:none"><div class="spin"></div> Loading pages…</div>
+  <div id="rl" class="lw" style="display:none"><div class="spin"></div> Loading pages…</div>
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════
-   CORS PROXIES — tries each in order until one works
-═══════════════════════════════════════════════════ */
-const PROXIES = [
+/* ── CORS PROXIES ───────────────────────────────── */
+const PROXIES=[
   'https://corsproxy.io/?',
   'https://api.allorigins.win/raw?url=',
-  'https://cors-anywhere.herokuapp.com/'
+  'https://thingproxy.freeboard.io/fetch/'
 ];
-let workingProxy = null;
+let bestProxy=null;
 
-async function proxyFetch(url) {
-  // If we have a working proxy, try it first
-  if (workingProxy !== null) {
-    try {
-      const r = await fetch(workingProxy + encodeURIComponent(url), {signal: AbortSignal.timeout(8000)});
-      if (r.ok) return r;
-    } catch(e) { workingProxy = null; }
+async function pFetch(url){
+  if(bestProxy){
+    try{
+      const r=await fetch(bestProxy+encodeURIComponent(url),{signal:AbortSignal.timeout(10000)});
+      if(r.ok)return r;
+    }catch{bestProxy=null;}
   }
-  // Try each proxy
-  for (const p of PROXIES) {
-    try {
-      const r = await fetch(p + encodeURIComponent(url), {signal: AbortSignal.timeout(8000)});
-      if (r.ok) { workingProxy = p; return r; }
-    } catch(e) {}
+  for(const p of PROXIES){
+    try{
+      const r=await fetch(p+encodeURIComponent(url),{signal:AbortSignal.timeout(10000)});
+      if(r.ok){bestProxy=p;return r;}
+    }catch{}
   }
   throw new Error('All proxies failed');
 }
+async function pJSON(url){const r=await pFetch(url);return r.json();}
 
-async function proxyJSON(url) {
-  const r = await proxyFetch(url);
-  return r.json();
-}
+/* ── STATE ──────────────────────────────────────── */
+const MDEX='https://api.mangadex.org';
+const COMICK='https://api.comick.fun';
+const CONSUMET='https://api.consumet.org';
 
-/* ═══════════════════════════════════════════════════
-   STATE
-═══════════════════════════════════════════════════ */
-const MDEX = 'https://api.mangadex.org';
-const COMICK = 'https://api.comick.fun';
+let curManga=null,curChapters=[],curChIdx=0;
+let pages=[],curPg=0,rMode='scroll';
+let prevPage='home',hMode='popular';
+let bOff=0,bPage=1,bGenre='',bGenreId='';
+let sortAsc=false,tagMap={};
+let refreshTimer=null,searchTimer=null;
 
-let activeSrcs = {md:true, ck:true, mp:false};
-let curManga = null;
-let curChapters = [];
-let sortAsc = false;
-let curChIdx = 0;
-let pages = [];
-let curPg = 0;
-let rMode = 'scroll';
-let prevPageName = 'home';
-let hMode = 'popular';
-let bOffset = 0;
-let bGenre = '';
-let bGenreId = '';
-let tagMap = {};
-let refreshTimer = null;
-let searchTimer = null;
-
-/* ═══════════════════════════════════════════════════
-   HELPERS
-═══════════════════════════════════════════════════ */
+/* ── HELPERS ────────────────────────────────────── */
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-function relTime(iso){
+function rt(iso){
   if(!iso)return'';
   const d=Date.now()-new Date(iso).getTime(),m=Math.floor(d/60000);
   if(m<1)return'just now';if(m<60)return m+'m ago';
@@ -382,322 +317,309 @@ function relTime(iso){
   const dy=Math.floor(h/24);if(dy<30)return dy+'d ago';
   return new Date(iso).toLocaleDateString();
 }
-function typeBadge(lang){
-  const map={'ja':['manga','bm'],'ko':['manhwa','bmh'],'zh':['manhua','bmc'],'zh-hk':['manhua','bmc']};
-  const [lbl,cls]=map[lang]||['manga','bm'];
-  return `<span class="badge ${cls}">${lbl}</span>`;
+function tbadge(lang){
+  const mp={'ja':['manga','bm'],'ko':['manhwa','bmh'],'zh':['manhua','bmc'],'zh-hk':['manhua','bmc']};
+  const[l,c]=mp[lang]||['manga','bm'];
+  return`<span class="badge ${c}">${l}</span>`;
 }
-function srcBadge(src){
-  const labels={md:'MangaDex',ck:'Comick',mp:'MangaPill'};
-  const dots={md:'dot-md',ck:'dot-ck',mp:'dot-mp'};
-  return `<span class="badge bsrc"><span class="usrc-dot ${dots[src]||'dot-md'}"></span>${labels[src]||src}</span>`;
+function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,30)}
+function dedup(arr){
+  const seen=new Set();
+  return arr.filter(i=>{const k=norm(i.title);if(seen.has(k))return false;seen.add(k);return true;});
 }
 
-/* ═══════════════════════════════════════════════════
-   MANGADEX API
-═══════════════════════════════════════════════════ */
-async function mdFetch(path) {
-  return proxyJSON(MDEX + path);
+/* ── MANGADEX ───────────────────────────────────── */
+async function mdFetch(path){return pJSON(MDEX+path);}
+function mdCov(m,sz='256'){
+  const r=(m.relationships||[]).find(r=>r.type==='cover_art');
+  if(!r?.attributes?.fileName)return'';
+  return`https://uploads.mangadex.org/covers/${m.id}/${r.attributes.fileName}.${sz}.jpg`;
 }
-function mdCover(m,size='256'){
-  const rel=m.relationships?.find(r=>r.type==='cover_art');
-  if(!rel?.attributes?.fileName)return'';
-  return `https://uploads.mangadex.org/covers/${m.id}/${rel.attributes.fileName}.${size}.jpg`;
-}
-function mdTitle(m){
-  const t=m.attributes?.title;
-  return t?.en||t?.['ja-ro']||t?.ja||t?.ko||Object.values(t||{})[0]||'Unknown';
+function mdTit(m){
+  const t=m.attributes?.title||{};
+  return t.en||t['ja-ro']||t.ja||t.ko||Object.values(t)[0]||'Unknown';
 }
 function mdToCard(m){
-  return {id:'md:'+m.id,rawId:m.id,src:'md',title:mdTitle(m),cover:mdCover(m,'512'),lang:m.attributes?.originalLanguage,status:m.attributes?.status};
+  return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),lang:m.attributes?.originalLanguage,status:m.attributes?.status||''};
 }
-
-async function mdPopular(){
-  const d=await mdFetch('/manga?limit=18&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[followedCount]=desc').catch(()=>null);
+async function mdFeatured(mode){
+  const ord=mode==='popular'?'followedCount':mode==='top'?'rating':'createdAt';
+  const d=await mdFetch(`/manga?limit=18&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc`).catch(()=>null);
   return d?.data?.map(mdToCard)||[];
 }
-async function mdNew(){
-  const d=await mdFetch('/manga?limit=18&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[createdAt]=desc').catch(()=>null);
-  return d?.data?.map(mdToCard)||[];
-}
-async function mdTop(){
-  const d=await mdFetch('/manga?limit=18&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[rating]=desc').catch(()=>null);
-  return d?.data?.map(mdToCard)||[];
-}
-async function mdLatestUpdates(){
-  const ch=await mdFetch('/chapter?limit=40&translatedLanguage[]=en&order[publishAt]=desc&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive').catch(()=>null);
-  if(!ch?.data)return[];
+async function mdUpdates(){
+  const d=await mdFetch('/chapter?limit=40&translatedLanguage[]=en&order[publishAt]=desc&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive').catch(()=>null);
+  if(!d?.data)return[];
   const seen=new Set(),rows=[];
-  for(const c of ch.data){
-    const mr=c.relationships?.find(r=>r.type==='manga');if(!mr)continue;
-    const key=mr.id+':'+c.attributes.chapter;
-    if(seen.has(key))continue;seen.add(key);
-    rows.push({mangaId:mr.id,chapterId:c.id,chNum:c.attributes.chapter,chTitle:c.attributes.title,time:c.attributes.publishAt,src:'md',mangaRel:mr});
+  for(const c of d.data){
+    const mr=(c.relationships||[]).find(r=>r.type==='manga');
+    if(!mr)continue;
+    const k=mr.id+':'+c.attributes.chapter;
+    if(seen.has(k))continue;seen.add(k);
+    rows.push({mangaId:mr.id,chId:c.id,rawChId:c.id,chNum:c.attributes.chapter,chTitle:c.attributes.title||'',time:c.attributes.publishAt,src:'md',_mr:mr});
   }
-  // batch-fetch covers
   const ids=[...new Set(rows.map(r=>r.mangaId))];
-  const mdata=await mdFetch('/manga?ids[]='+ids.slice(0,20).join('&ids[]=')+'&includes[]=cover_art&limit=20').catch(()=>null);
-  const mm={};if(mdata?.data)mdata.data.forEach(m=>mm[m.id]=m);
-  return rows.map(r=>{
-    const m=mm[r.mangaId]||r.mangaRel;
-    return {...r,title:mdTitle(m),cover:mdCover(m,'128')};
-  });
+  const md=await mdFetch('/manga?ids[]='+ids.slice(0,20).join('&ids[]=')+'&includes[]=cover_art&limit=20').catch(()=>null);
+  const mm={};(md?.data||[]).forEach(m=>mm[m.id]=m);
+  return rows.map(r=>{const m=mm[r.mangaId]||r._mr;return{...r,title:mdTit(m),cover:mdCov(m,'128')};});
 }
 async function mdSearch(q){
-  const d=await mdFetch(`/manga?title=${encodeURIComponent(q)}&limit=6&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en`).catch(()=>null);
+  const d=await mdFetch(`/manga?title=${encodeURIComponent(q)}&limit=5&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en`).catch(()=>null);
   return d?.data?.map(mdToCard)||[];
 }
-async function mdBrowse(offset,genreId){
-  let url=`/manga?limit=24&offset=${offset}&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[followedCount]=desc`;
-  if(genreId)url+=`&includedTags[]=${genreId}`;
+async function mdBrowse(off,gid){
+  let url=`/manga?limit=18&offset=${off}&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[followedCount]=desc`;
+  if(gid)url+=`&includedTags[]=${gid}`;
   const d=await mdFetch(url).catch(()=>null);
-  return {items:d?.data?.map(mdToCard)||[],total:d?.total||0};
+  return d?.data?.map(mdToCard)||[];
 }
-async function mdDetail(rawId){
-  const d=await mdFetch(`/manga/${rawId}?includes[]=cover_art&includes[]=author&includes[]=artist`).catch(()=>null);
+async function mdDetail(id){
+  const d=await mdFetch(`/manga/${id}?includes[]=cover_art&includes[]=author`).catch(()=>null);
   if(!d?.data)return null;
   const m=d.data;
-  const desc=m.attributes?.description?.en||Object.values(m.attributes?.description||{})[0]||'';
-  const author=m.relationships?.find(r=>r.type==='author')?.attributes?.name||'Unknown';
-  return {id:'md:'+m.id,rawId:m.id,src:'md',title:mdTitle(m),cover:mdCover(m,'512'),lang:m.attributes?.originalLanguage,status:m.attributes?.status,year:m.attributes?.year,desc,author};
+  return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),
+    lang:m.attributes?.originalLanguage,status:m.attributes?.status||'',year:m.attributes?.year||'',
+    desc:m.attributes?.description?.en||Object.values(m.attributes?.description||{})[0]||'',
+    author:(m.relationships||[]).find(r=>r.type==='author')?.attributes?.name||'Unknown'};
 }
-async function mdChapters(rawId){
-  let chapters=[],offset=0;
+async function mdChapters(id){
+  let all=[],off=0;
   while(true){
-    const d=await mdFetch(`/manga/${rawId}/feed?limit=96&offset=${offset}&translatedLanguage[]=en&order[chapter]=desc&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
+    const d=await mdFetch(`/manga/${id}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=desc&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
     if(!d?.data?.length)break;
-    chapters=chapters.concat(d.data);
+    all=all.concat(d.data);
     if(d.data.length<96)break;
-    offset+=96;if(offset>960)break;
+    off+=96;if(off>960)break;
   }
   const seen={};
-  for(const c of chapters){const n=c.attributes.chapter||'0';if(!seen[n])seen[n]=c;}
-  return Object.values(seen).map(c=>({id:c.id,src:'md',num:c.attributes.chapter,title:c.attributes.title||'',date:c.attributes.publishAt}));
+  for(const c of all){const n=c.attributes.chapter||'0';if(!seen[n])seen[n]=c;}
+  return Object.values(seen).map(c=>({id:c.id,rawId:c.id,src:'md',num:c.attributes.chapter,title:c.attributes.title||'',date:c.attributes.publishAt}));
 }
-async function mdPages(chapterId){
-  const d=await mdFetch(`/at-home/server/${chapterId}`).catch(()=>null);
+async function mdPages(id){
+  const d=await mdFetch(`/at-home/server/${id}`).catch(()=>null);
   if(!d?.chapter)return[];
-  const {baseUrl,chapter:{hash,data}}=d;
-  return data.map(p=>`${baseUrl}/data/${hash}/${p}`);
+  const{baseUrl,chapter:{hash,dataSaver,data}}=d;
+  const pg=dataSaver||data,folder=dataSaver?'data-saver':'data';
+  return pg.map(p=>`${baseUrl}/${folder}/${hash}/${p}`);
 }
 
-/* ═══════════════════════════════════════════════════
-   COMICK API
-═══════════════════════════════════════════════════ */
-async function ckFetch(path){return proxyJSON(COMICK+path);}
-function ckCover(item){return item.md_covers?.[0]?.b2key?`https://meo.comick.pictures/${item.md_covers[0].b2key}`:item.cover_url||'';}
-function ckToCard(item){
-  return {id:'ck:'+item.hid,rawId:item.hid,src:'ck',title:item.title||item.slug||'',cover:ckCover(item),lang:item.country||'jp',status:item.status===1?'ongoing':'completed'};
-}
-async function ckPopular(){
-  const d=await ckFetch('/v1.0/search?limit=18&page=1&sort=view&lang=en&type=comic').catch(()=>null);
+/* ── COMICK ─────────────────────────────────────── */
+async function ckFetch(path){return pJSON(COMICK+path);}
+function ckCov(i){return i.md_covers?.[0]?.b2key?`https://meo.comick.pictures/${i.md_covers[0].b2key}`:i.cover_url||'';}
+function ckToCard(i){return{id:'ck:'+i.hid,rawId:i.hid,src:'ck',title:i.title||i.slug||'',cover:ckCov(i),lang:i.country||'jp',status:i.status===1?'ongoing':'completed'};}
+async function ckFeatured(){
+  const d=await ckFetch('/v1.0/search?limit=18&page=1&sort=view&lang=en').catch(()=>null);
   return d?.map(ckToCard)||[];
 }
-async function ckLatestUpdates(){
+async function ckUpdates(){
   const d=await ckFetch('/v1.0/chapter?page=1&limit=40&lang=en').catch(()=>null);
   if(!d)return[];
   return d.map(c=>({
     mangaId:'ck:'+c.md_comics?.hid,rawMangaId:c.md_comics?.hid,
-    chapterId:'ck:'+c.hid,rawChId:c.hid,
-    chNum:c.chap,chTitle:c.title||'',
-    time:c.created_at,src:'ck',
+    chId:'ck:'+c.hid,rawChId:c.hid,
+    chNum:c.chap,chTitle:c.title||'',time:c.created_at,src:'ck',
     title:c.md_comics?.title||'',
     cover:c.md_comics?.md_covers?.[0]?.b2key?`https://meo.comick.pictures/${c.md_comics.md_covers[0].b2key}`:''
   }));
 }
 async function ckSearch(q){
-  const d=await ckFetch(`/v1.0/search?q=${encodeURIComponent(q)}&limit=6&lang=en`).catch(()=>null);
+  const d=await ckFetch(`/v1.0/search?q=${encodeURIComponent(q)}&limit=5&lang=en`).catch(()=>null);
   return d?.map(ckToCard)||[];
 }
-async function ckBrowse(page,genre){
-  let url=`/v1.0/search?limit=24&page=${page}&sort=view&lang=en`;
+async function ckBrowse(pg,genre){
+  let url=`/v1.0/search?limit=18&page=${pg}&sort=view&lang=en`;
   if(genre)url+=`&genres=${encodeURIComponent(genre)}`;
   const d=await ckFetch(url).catch(()=>null);
-  return {items:d?.map(ckToCard)||[]};
+  return d?.map(ckToCard)||[];
 }
-async function ckDetail(rawId){
-  const d=await ckFetch(`/comic/${rawId}?tachiyomi=true`).catch(()=>null);
+async function ckDetail(id){
+  const d=await ckFetch(`/comic/${id}?tachiyomi=true`).catch(()=>null);
   if(!d?.comic)return null;
   const c=d.comic;
-  return {id:'ck:'+c.hid,rawId:c.hid,src:'ck',title:c.title||c.slug,cover:ckCover(c),lang:c.country||'jp',status:c.status===1?'ongoing':'completed',desc:c.desc||'',author:d.authors?.[0]?.name||'Unknown'};
+  return{id:'ck:'+c.hid,rawId:c.hid,src:'ck',title:c.title||c.slug,cover:ckCov(c),
+    lang:c.country||'jp',status:c.status===1?'ongoing':'completed',
+    desc:c.desc||'',author:d.authors?.[0]?.name||'Unknown'};
 }
-async function ckChapters(rawId){
-  const d=await ckFetch(`/comic/${rawId}/chapters?lang=en&limit=200&page=1`).catch(()=>null);
+async function ckChapters(id){
+  const d=await ckFetch(`/comic/${id}/chapters?lang=en&limit=200&page=1`).catch(()=>null);
   if(!d?.chapters)return[];
   return d.chapters.map(c=>({id:'ck:'+c.hid,rawId:c.hid,src:'ck',num:c.chap,title:c.title||'',date:c.created_at}));
 }
-async function ckPages(rawId){
-  const d=await ckFetch(`/chapter/${rawId}?tachiyomi=true`).catch(()=>null);
-  if(!d?.chapter?.images)return[];
-  return d.chapter.images.map(i=>i.url);
+async function ckPages(id){
+  const d=await ckFetch(`/chapter/${id}?tachiyomi=true`).catch(()=>null);
+  return d?.chapter?.images?.map(i=>i.url)||[];
 }
 
-/* ═══════════════════════════════════════════════════
-   MERGED MULTI-SOURCE FUNCTIONS
-═══════════════════════════════════════════════════ */
-async function fetchFeatured(mode){
-  const tasks=[];
-  if(activeSrcs.md){
-    if(mode==='popular')tasks.push(mdPopular());
-    else if(mode==='new')tasks.push(mdNew());
-    else tasks.push(mdTop());
-  }
-  if(activeSrcs.ck)tasks.push(ckPopular());
-  const results=await Promise.allSettled(tasks);
-  const items=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
-  // deduplicate by title similarity
-  return dedup(items);
+/* ── CONSUMET (MangaKakalot + MangaSee) ─────────── */
+async function csFetch(path){return pJSON(CONSUMET+path);}
+function csToCard(m,provider){
+  return{id:`cs:${provider}:${m.id}`,rawId:m.id,src:'cs',provider,
+    title:m.title||'',cover:m.image||'',lang:'ja',status:m.status||''};
 }
-async function fetchLatestUpdates(){
-  const tasks=[];
-  if(activeSrcs.md)tasks.push(mdLatestUpdates());
-  if(activeSrcs.ck)tasks.push(ckLatestUpdates());
-  const results=await Promise.allSettled(tasks);
-  const items=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
-  return items.sort((a,b)=>new Date(b.time)-new Date(a.time)).slice(0,40);
+async function csFeatured(){
+  const d=await csFetch('/manga/mangakakalot?page=1').catch(()=>null);
+  return(d?.results||[]).map(m=>csToCard(m,'mangakakalot'));
 }
-async function fetchSearch(q){
-  const tasks=[];
-  if(activeSrcs.md)tasks.push(mdSearch(q));
-  if(activeSrcs.ck)tasks.push(ckSearch(q));
-  const results=await Promise.allSettled(tasks);
-  return dedup(results.flatMap(r=>r.status==='fulfilled'?r.value:[]));
+async function csUpdates(){
+  const d=await csFetch('/manga/mangakakalot?type=latest&page=1').catch(()=>null);
+  return(d?.results||[]).filter(m=>m.latestChapter).map(m=>({
+    mangaId:`cs:mangakakalot:${m.id}`,rawMangaId:m.id,
+    chId:`cs:mangakakalot:${m.latestChapter?.id||m.id}`,rawChId:m.latestChapter?.id||m.id,
+    chNum:m.latestChapter?.chapterNumber||'',chTitle:'',
+    time:m.latestChapter?.releaseDate||'',src:'cs',provider:'mangakakalot',
+    title:m.title||'',cover:m.image||''
+  }));
 }
-function dedup(items){
-  const seen=new Set();
-  return items.filter(i=>{
-    const k=norm(i.title);
-    if(seen.has(k))return false;seen.add(k);return true;
-  });
+async function csSearch(q){
+  const [a,b]=await Promise.allSettled([
+    csFetch(`/manga/mangakakalot/${encodeURIComponent(q)}`),
+    csFetch(`/manga/mangasee123/${encodeURIComponent(q)}`)
+  ]);
+  return dedup([
+    ...((a.status==='fulfilled'?a.value?.results:[]) ||[]).map(m=>csToCard(m,'mangakakalot')),
+    ...((b.status==='fulfilled'?b.value?.results:[]) ||[]).map(m=>csToCard(m,'mangasee123'))
+  ]);
 }
-function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,30)}
+async function csBrowse(){
+  const d=await csFetch('/manga/mangakakalot?page=1').catch(()=>null);
+  return(d?.results||[]).map(m=>csToCard(m,'mangakakalot'));
+}
+async function csDetail(provider,rawId){
+  const d=await csFetch(`/manga/${provider}/info?id=${encodeURIComponent(rawId)}`).catch(()=>null);
+  if(!d?.title)return null;
+  return{id:`cs:${provider}:${rawId}`,rawId,src:'cs',provider,
+    title:d.title,cover:d.image||'',lang:'ja',status:d.status||'',
+    desc:d.description||'',author:(d.authors||[]).join(', ')||'Unknown'};
+}
+async function csChapters(provider,rawId){
+  const d=await csFetch(`/manga/${provider}/info?id=${encodeURIComponent(rawId)}`).catch(()=>null);
+  return(d?.chapters||[]).map(c=>({
+    id:`cs:${provider}:${c.id}`,rawId:c.id,src:'cs',provider,
+    num:c.chapterNumber,title:c.title||'',date:c.releaseDate||''
+  }));
+}
+async function csPages(provider,rawId){
+  const d=await csFetch(`/manga/${provider}/read?chapterId=${encodeURIComponent(rawId)}`).catch(()=>null);
+  if(!Array.isArray(d))return[];
+  return d.map(p=>p.img||p.url||p).filter(Boolean);
+}
 
-/* ═══════════════════════════════════════════════════
-   RENDER
-═══════════════════════════════════════════════════ */
+/* ── UNIFIED MERGE ──────────────────────────────── */
+async function allFeatured(mode){
+  const[a,b,c]=await Promise.allSettled([mdFeatured(mode),ckFeatured(),csFeatured()]);
+  return dedup([
+    ...(a.status==='fulfilled'?a.value:[]),
+    ...(b.status==='fulfilled'?b.value:[]),
+    ...(c.status==='fulfilled'?c.value:[])
+  ]);
+}
+async function allUpdates(){
+  const[a,b,c]=await Promise.allSettled([mdUpdates(),ckUpdates(),csUpdates()]);
+  return[
+    ...(a.status==='fulfilled'?a.value:[]),
+    ...(b.status==='fulfilled'?b.value:[]),
+    ...(c.status==='fulfilled'?c.value:[])
+  ].sort((x,y)=>new Date(y.time||0)-new Date(x.time||0)).slice(0,60);
+}
+async function allSearch(q){
+  const[a,b,c]=await Promise.allSettled([mdSearch(q),ckSearch(q),csSearch(q)]);
+  return dedup([
+    ...(a.status==='fulfilled'?a.value:[]),
+    ...(b.status==='fulfilled'?b.value:[]),
+    ...(c.status==='fulfilled'?c.value:[])
+  ]);
+}
+async function allBrowse(mdOff,ckPg,gid,genre){
+  const[a,b,c]=await Promise.allSettled([mdBrowse(mdOff,gid),ckBrowse(ckPg,genre),csBrowse()]);
+  return dedup([
+    ...(a.status==='fulfilled'?a.value:[]),
+    ...(b.status==='fulfilled'?b.value:[]),
+    ...(c.status==='fulfilled'?c.value:[])
+  ]);
+}
+
+/* ── RENDER ─────────────────────────────────────── */
 function mCard(item){
-  return `<div class="mcard" onclick="showDetail('${esc(item.id)}')">
-    <div class="mcard-inner">
+  return`<div class="mc" onclick="showDetail('${esc(item.id)}')">
+    <div class="mci">
       <img src="${esc(item.cover)}" alt="${esc(item.title)}" class="shim" onload="this.classList.remove('shim')" onerror="this.style.display='none'" loading="lazy">
-      <div class="mcard-ov">
-        <div class="mcard-ttl">${esc(item.title)}</div>
-        <div>${typeBadge(item.lang)} ${activeSrcs.md&&activeSrcs.ck?srcBadge(item.src):''}</div>
+      <div class="mov">
+        <div class="mtt">${esc(item.title)}</div>
+        <div>${tbadge(item.lang)}</div>
       </div>
     </div>
   </div>`;
 }
-
-function uRow(u, onclick){
-  const chNum=u.chNum?`Ch. ${u.chNum}`:'Oneshot';
-  const chTit=u.chTitle?` — ${u.chTitle}`:'';
-  const dot={md:'dot-md',ck:'dot-ck',mp:'dot-mp'}[u.src]||'dot-md';
-  return `<div class="urow" onclick="${onclick}">
-    <img class="uthumb shim" src="${esc(u.cover)}" alt="${esc(u.title)}" onload="this.classList.remove('shim')" onerror="this.style.display='none'" loading="lazy">
-    <div class="uinfo">
-      <div class="uttl">${esc(u.title)}</div>
-      <div class="uch"><span class="usrc-dot ${dot}"></span>${esc(chNum+chTit)}</div>
+function uRow(u){
+  const n=u.chNum?`Ch. ${u.chNum}`:'Oneshot';
+  const t=u.chTitle?` — ${u.chTitle}`:'';
+  const mid=encodeURIComponent(u.rawMangaId||u.mangaId||'');
+  const cid=encodeURIComponent(u.rawChId||'');
+  const prov=encodeURIComponent(u.provider||'');
+  return`<div class="ur" onclick="openUpdate('${esc(u.src)}','${mid}','${cid}','${prov}')">
+    <img class="uth shim" src="${esc(u.cover)}" alt="${esc(u.title)}" onload="this.classList.remove('shim')" onerror="this.style.display='none'" loading="lazy">
+    <div class="ui">
+      <div class="utt">${esc(u.title)}</div>
+      <div class="uc">${esc(n+t)}</div>
     </div>
-    <div class="utime">${relTime(u.time)}</div>
+    <div class="ut">${rt(u.time)}</div>
   </div>`;
 }
 
-/* ═══════════════════════════════════════════════════
-   HOME
-═══════════════════════════════════════════════════ */
+/* ── HOME ───────────────────────────────────────── */
 async function loadHome(){
   loadFeatured();
   loadHomeUpdates();
   clearInterval(refreshTimer);
   refreshTimer=setInterval(()=>{
-    if(document.getElementById('hpage').style.display!=='none')loadHomeUpdates();
-    if(document.getElementById('upage').style.display!=='none')loadUpdates();
+    if(vis('hp'))loadHomeUpdates();
+    if(vis('up'))loadUpdates();
   },5*60*1000);
 }
 async function loadFeatured(){
-  const g=document.getElementById('hgrid');
-  g.innerHTML='<div class="ldwrap"><div class="spin"></div> Loading…</div>';
-  const items=await fetchFeatured(hMode).catch(()=>[]);
-  if(!items.length){g.innerHTML='<div class="empty">Could not load. Check your connection.</div>';return;}
-  g.innerHTML=items.map(mCard).join('');
+  const g=document.getElementById('hg');
+  g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  const items=await allFeatured(hMode).catch(()=>[]);
+  g.innerHTML=items.length?items.map(mCard).join(''):'<div class="emp">Could not connect. Please check your internet.</div>';
 }
 async function loadHomeUpdates(){
-  const el=document.getElementById('hupdates');
-  el.innerHTML='<div class="ldwrap"><div class="spin"></div> Loading…</div>';
-  const updates=await fetchLatestUpdates().catch(()=>[]);
-  if(!updates.length){el.innerHTML='<div class="empty">No updates found.</div>';return;}
-  el.innerHTML=updates.slice(0,20).map(u=>uRow(u,`openUpdateRow('${esc(u.src)}','${esc(u.rawMangaId||u.mangaId)}','${esc(u.rawChId||u.chapterId)}')`)).join('');
+  const el=document.getElementById('hu');
+  el.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  const upd=await allUpdates().catch(()=>[]);
+  el.innerHTML=upd.length?upd.slice(0,20).map(uRow).join(''):'<div class="emp">No updates found.</div>';
 }
 function htab(mode,el){
   hMode=mode;
-  document.querySelectorAll('.tabbar .tab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on');loadFeatured();
+  document.querySelectorAll('.tbar .tab').forEach(t=>t.classList.remove('on'));
+  el.classList.add('on');
+  loadFeatured();
 }
 
-/* ═══════════════════════════════════════════════════
-   UPDATES PAGE
-═══════════════════════════════════════════════════ */
+/* ── UPDATES PAGE ───────────────────────────────── */
 async function loadUpdates(){
-  const el=document.getElementById('ulist');
-  el.innerHTML='<div class="ldwrap"><div class="spin"></div> Loading…</div>';
-  const updates=await fetchLatestUpdates().catch(()=>[]);
-  if(!updates.length){el.innerHTML='<div class="empty">No updates found.</div>';return;}
-  el.innerHTML=updates.map(u=>uRow(u,`openUpdateRow('${esc(u.src)}','${esc(u.rawMangaId||u.mangaId)}','${esc(u.rawChId||u.chapterId)}')`)).join('');
-}
-async function openUpdateRow(src,mangaRawId,chRawId){
-  hideAll();
-  document.getElementById('rpage').style.display='block';
-  document.getElementById('rttl').textContent='Loading…';
-  document.getElementById('rchi').textContent='';
-  document.getElementById('scroll-r').innerHTML='';
-  document.getElementById('rld').style.display='flex';
-  // load detail + chapters if needed
-  if(!curManga||curManga.src!==src||curManga.rawId!==mangaRawId){
-    const detail = src==='md'?await mdDetail(mangaRawId):await ckDetail(mangaRawId);
-    if(detail){
-      curManga=detail;
-      const chs=src==='md'?await mdChapters(mangaRawId):await ckChapters(mangaRawId);
-      curChapters=chs.sort((a,b)=>parseFloat(b.num||0)-parseFloat(a.num||0));
-    }
-  }
-  const idx=curChapters.findIndex(c=>c.rawId===chRawId||c.id===('ck:'+chRawId)||c.id===chRawId);
-  curChIdx=idx>=0?idx:0;
-  const ch=curChapters[curChIdx];
-  document.getElementById('rttl').textContent=curManga?.title||'';
-  document.getElementById('rchi').textContent=ch?`Ch. ${ch.num}`:'';
-  updateNavBtns();
-  const rawChId=ch?.rawId||chRawId;
-  const pgSrc=ch?.src||src;
-  await loadPages(pgSrc,rawChId);
+  const el=document.getElementById('ul');
+  el.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  const upd=await allUpdates().catch(()=>[]);
+  el.innerHTML=upd.length?upd.map(uRow).join(''):'<div class="emp">No updates found.</div>';
 }
 
-/* ═══════════════════════════════════════════════════
-   BROWSE
-═══════════════════════════════════════════════════ */
-let bPage=1;
+/* ── BROWSE ─────────────────────────────────────── */
 async function loadBrowse(reset=true){
-  if(reset){bOffset=0;bPage=1;}
-  const g=document.getElementById('bgrid');
-  if(reset)g.innerHTML='<div class="ldwrap"><div class="spin"></div> Loading…</div>';
-  let items=[];
-  if(activeSrcs.md){
-    const {items:mi}=await mdBrowse(bOffset,bGenreId).catch(()=>({items:[]}));
-    items=items.concat(mi);bOffset+=mi.length;
-  }
-  if(activeSrcs.ck){
-    const {items:ci}=await ckBrowse(bPage,bGenre).catch(()=>({items:[]}));
-    items=items.concat(ci);bPage++;
-  }
-  items=dedup(items);
+  if(reset){bOff=0;bPage=1;}
+  const g=document.getElementById('bg');
+  if(reset)g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  const items=await allBrowse(bOff,bPage,bGenreId,bGenre).catch(()=>[]);
+  bOff+=18;bPage++;
   if(reset)g.innerHTML='';
-  if(!items.length&&reset){g.innerHTML='<div class="empty">No results found.</div>';return;}
+  if(!items.length&&reset){g.innerHTML='<div class="emp">No results found.</div>';return;}
   g.innerHTML+=items.map(mCard).join('');
-  document.getElementById('bmore').style.display=items.length>=12?'block':'none';
+  document.getElementById('bmore').style.display=items.length>=10?'block':'none';
 }
-function browseMore(){loadBrowse(false)}
-async function filterG(name,el){
-  document.querySelectorAll('.gchip').forEach(c=>c.classList.remove('on'));
+function browseMore(){loadBrowse(false);}
+async function gfilt(name,el){
+  document.querySelectorAll('.gc').forEach(c=>c.classList.remove('on'));
   el.classList.add('on');bGenre=name;bGenreId='';
-  if(name&&activeSrcs.md){
+  if(name){
     if(!Object.keys(tagMap).length){
       const td=await mdFetch('/manga/tag').catch(()=>null);
       if(td?.data)td.data.forEach(t=>{const n=t.attributes?.name?.en;if(n)tagMap[n]=t.id;});
@@ -707,123 +629,132 @@ async function filterG(name,el){
   loadBrowse();
 }
 
-/* ═══════════════════════════════════════════════════
-   SEARCH
-═══════════════════════════════════════════════════ */
-document.getElementById('sinput').addEventListener('input',e=>{
+/* ── SEARCH ─────────────────────────────────────── */
+document.getElementById('si').addEventListener('input',e=>{
   clearTimeout(searchTimer);
   const q=e.target.value.trim();
-  const drop=document.getElementById('sdrop');
+  const drop=document.getElementById('sd');
   if(q.length<2){drop.style.display='none';return;}
-  drop.innerHTML='<div class="ldwrap" style="padding:12px"><div class="spin"></div></div>';
+  drop.innerHTML='<div class="lw" style="padding:10px"><div class="spin"></div></div>';
   drop.style.display='block';
   searchTimer=setTimeout(()=>doSearch(q),380);
 });
-document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))document.getElementById('sdrop').style.display='none';});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.sw'))document.getElementById('sd').style.display='none';
+});
 async function doSearch(q){
-  const drop=document.getElementById('sdrop');
-  const results=await fetchSearch(q).catch(()=>[]);
-  if(!results.length){drop.innerHTML='<div class="empty" style="padding:14px">No results found</div>';return;}
-  drop.innerHTML=results.map(m=>`<div class="ditem" onclick="searchPick('${esc(m.id)}')">
-    <img class="dthumb" src="${esc(m.cover)}" alt="${esc(m.title)}" onerror="this.style.display='none'">
-    <div class="dinfo"><p>${esc(m.title)}</p><small>${m.src==='md'?'MangaDex':'Comick'} · ${m.status}</small></div>
+  const drop=document.getElementById('sd');
+  const results=await allSearch(q).catch(()=>[]);
+  if(!results.length){drop.innerHTML='<div class="emp" style="padding:14px">No results found</div>';return;}
+  drop.innerHTML=results.map(m=>`<div class="di" onclick="searchPick('${esc(m.id)}')">
+    <img class="dth" src="${esc(m.cover)}" alt="${esc(m.title)}" onerror="this.style.display='none'">
+    <div class="din"><p>${esc(m.title)}</p><small>${m.status||''}</small></div>
   </div>`).join('');
 }
 function searchPick(id){
-  document.getElementById('sdrop').style.display='none';
-  document.getElementById('sinput').value='';
+  document.getElementById('sd').style.display='none';
+  document.getElementById('si').value='';
   showDetail(id);
 }
 
-/* ═══════════════════════════════════════════════════
-   DETAIL
-═══════════════════════════════════════════════════ */
+/* ── DETAIL ─────────────────────────────────────── */
 async function showDetail(id){
   hideAll();
-  document.getElementById('dpage').style.display='block';
-  prevPageName=getCurPage()||'home';
-  // reset
-  document.getElementById('dttl').textContent='Loading…';
-  document.getElementById('dmeta').innerHTML='';
-  document.getElementById('ddesc').textContent='';
-  document.getElementById('dbtns').innerHTML='';
-  document.getElementById('chlist').innerHTML='<div class="ldwrap"><div class="spin"></div> Loading…</div>';
-  document.getElementById('chttl').textContent='Chapters';
+  document.getElementById('dp').style.display='block';
+  prevPage=getCur()||'home';
+  document.getElementById('dtt').textContent='Loading…';
+  ['dm','dd','dbs'].forEach(i=>document.getElementById(i).innerHTML='');
+  document.getElementById('chl').innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  document.getElementById('cht').textContent='Chapters';
 
-  const [src,rawId]=id.split(':');
+  const parts=id.split(':');
+  const src=parts[0];
   let detail=null;
-  if(src==='md')detail=await mdDetail(rawId);
-  else if(src==='ck')detail=await ckDetail(rawId);
-  if(!detail){document.getElementById('dttl').textContent='Failed to load.';return;}
+  if(src==='md')detail=await mdDetail(parts[1]);
+  else if(src==='ck')detail=await ckDetail(parts[1]);
+  else if(src==='cs')detail=await csDetail(parts[1],parts.slice(2).join(':'));
+  if(!detail){document.getElementById('dtt').textContent='Failed to load.';return;}
   curManga=detail;
   document.title=detail.title+' — Inkflow';
-  document.getElementById('dttl').textContent=detail.title;
-  document.getElementById('dcov').src=detail.cover;
-  document.getElementById('dcov').alt=detail.title;
-  document.getElementById('ddesc').textContent=detail.desc||'No description available.';
-  document.getElementById('dmeta').innerHTML=
-    typeBadge(detail.lang)+
-    `<span class="badge bsrc">${detail.status}</span>`+
-    (detail.year?`<span class="badge bsrc">${detail.year}</span>`:'')+
-    srcBadge(detail.src);
+  document.getElementById('dtt').textContent=detail.title;
+  document.getElementById('dcv').src=detail.cover;
+  document.getElementById('dd').textContent=detail.desc||'No description available.';
+  document.getElementById('dm').innerHTML=
+    tbadge(detail.lang)+
+    `<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${detail.status}</span>`+
+    (detail.year?`<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${detail.year}</span>`:'');
 
-  // load chapters
   let chs=[];
-  if(src==='md')chs=await mdChapters(rawId);
-  else if(src==='ck')chs=await ckChapters(rawId);
+  if(src==='md')chs=await mdChapters(parts[1]);
+  else if(src==='ck')chs=await ckChapters(parts[1]);
+  else if(src==='cs')chs=await csChapters(parts[1],parts.slice(2).join(':'));
   curChapters=chs.sort((a,b)=>parseFloat(b.num||0)-parseFloat(a.num||0));
-  renderChList();
-  document.getElementById('chttl').textContent=`${curChapters.length} Chapters`;
+  renderChs();
+  document.getElementById('cht').textContent=`${curChapters.length} Chapters`;
   const first=curChapters[curChapters.length-1];
-  document.getElementById('dbtns').innerHTML=first
-    ?`<button class="dbtn pri" onclick="openCh(${curChapters.length-1})">▶ Start Reading</button>`:'';
+  document.getElementById('dbs').innerHTML=first
+    ?`<button class="db p" onclick="openCh(${curChapters.length-1})">▶ Start Reading</button>`:'';
 }
-
-function renderChList(){
-  const el=document.getElementById('chlist');
-  if(!curChapters.length){el.innerHTML='<div class="empty">No English chapters found.</div>';return;}
+function renderChs(){
+  const el=document.getElementById('chl');
+  if(!curChapters.length){el.innerHTML='<div class="emp">No chapters found.</div>';return;}
   const list=sortAsc?[...curChapters].reverse():curChapters;
   el.innerHTML=list.map((c,i)=>{
     const idx=sortAsc?curChapters.length-1-i:i;
     const num=c.num?`Ch. ${c.num}`:'Oneshot';
-    return `<div class="chrow" onclick="openCh(${idx})">
-      <span class="chnum">${esc(num)}</span>
-      <span class="chtit">${esc(c.title)||'&nbsp;'}</span>
-      <span class="chdate">${relTime(c.date)}</span>
+    return`<div class="cr" onclick="openCh(${idx})">
+      <span class="cn">${esc(num)}</span>
+      <span class="ctit">${esc(c.title)||'&nbsp;'}</span>
+      <span class="cd">${rt(c.date)}</span>
     </div>`;
   }).join('');
 }
 function togSort(){
   sortAsc=!sortAsc;
-  document.getElementById('sbtn').textContent=sortAsc?'↓ Oldest first':'↑ Newest first';
-  renderChList();
+  document.getElementById('sb').textContent=sortAsc?'↓ Oldest first':'↑ Newest first';
+  renderChs();
 }
 
-/* ═══════════════════════════════════════════════════
-   READER
-═══════════════════════════════════════════════════ */
+/* ── READER ─────────────────────────────────────── */
 async function openCh(idx){
   curChIdx=idx;
   const ch=curChapters[idx];if(!ch)return;
-  showReaderPage();
+  showReader();
   document.getElementById('rttl').textContent=curManga?.title||'';
-  document.getElementById('rchi').textContent=ch.num?`Ch. ${ch.num}`:'Oneshot';
-  updateNavBtns();
-  await loadPages(ch.src||curManga?.src,ch.rawId||ch.id.split(':')[1]);
+  document.getElementById('rci').textContent=ch.num?`Ch. ${ch.num}`:'Oneshot';
+  navBtns();
+  await loadPages(ch);
 }
-function updateNavBtns(){
-  document.getElementById('pbtn').disabled=curChIdx>=curChapters.length-1;
-  document.getElementById('nbtn').disabled=curChIdx<=0;
+function navBtns(){
+  document.getElementById('pb').disabled=curChIdx>=curChapters.length-1;
+  document.getElementById('nb').disabled=curChIdx<=0;
 }
-async function loadPages(src,rawId){
-  document.getElementById('scroll-r').innerHTML='';
-  document.getElementById('rld').style.display='flex';
+async function loadPages(ch){
+  document.getElementById('sr').innerHTML='';
+  document.getElementById('rl').style.display='flex';
   let pg=[];
-  if(src==='md')pg=await mdPages(rawId).catch(()=>[]);
-  else if(src==='ck')pg=await ckPages(rawId).catch(()=>[]);
-  document.getElementById('rld').style.display='none';
+  if(ch.src==='md')pg=await mdPages(ch.rawId).catch(()=>[]);
+  else if(ch.src==='ck')pg=await ckPages(ch.rawId).catch(()=>[]);
+  else if(ch.src==='cs')pg=await csPages(ch.provider,ch.rawId).catch(()=>[]);
+  // fallback: proxy the MD images if they came back but may be blocked
+  if(!pg.length&&ch.src==='md'){
+    const d=await mdFetch(`/at-home/server/${ch.rawId}`).catch(()=>null);
+    if(d?.chapter){
+      const{baseUrl,chapter:{hash,dataSaver,data}}=d;
+      const files=dataSaver||data,folder=dataSaver?'data-saver':'data';
+      pg=files.map(p=>`https://corsproxy.io/?${encodeURIComponent(`${baseUrl}/${folder}/${hash}/${p}`)}`);
+    }
+  }
+  document.getElementById('rl').style.display='none';
   if(!pg.length){
-    document.getElementById('scroll-r').innerHTML='<div class="empty" style="padding:60px">Could not load pages — the chapter may need a different source or login.</div>';
+    const mdLink=ch.src==='md'?`https://mangadex.org/chapter/${ch.rawId}`:'';
+    document.getElementById('sr').style.display='flex';
+    document.getElementById('sr').innerHTML=`<div style="text-align:center;padding:60px 20px;max-width:480px;margin:0 auto">
+      <div style="font-size:36px;margin-bottom:14px;opacity:.3">📖</div>
+      <p style="font-size:15px;font-weight:500;margin-bottom:8px">Chapter unavailable here</p>
+      <p style="color:var(--tx2);font-size:13px;line-height:1.7;margin-bottom:18px">This chapter requires a login or is licensed. Try reading it on the original site.</p>
+      ${mdLink?`<a href="${mdLink}" target="_blank" rel="noopener" style="display:inline-block;padding:9px 18px;background:var(--acc);color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:500">Read on MangaDex →</a>`:''}
+    </div>`;
     return;
   }
   pages=pg;curPg=0;
@@ -831,111 +762,109 @@ async function loadPages(src,rawId){
 }
 function renderReader(){
   if(rMode==='scroll'){
-    document.getElementById('scroll-r').style.display='flex';
-    document.getElementById('page-r').style.display='none';
-    document.getElementById('scroll-r').innerHTML=pages.map((p,i)=>`<img class="spage shim" src="${esc(p)}" alt="Page ${i+1}" loading="lazy" onload="this.classList.remove('shim')">`).join('');
-  } else {
-    document.getElementById('scroll-r').style.display='none';
-    document.getElementById('page-r').style.display='flex';
-    showPgAt(0);
+    document.getElementById('sr').style.display='flex';
+    document.getElementById('pr').style.display='none';
+    document.getElementById('sr').innerHTML=pages.map((p,i)=>`<img class="spage shim" src="${esc(p)}" alt="Page ${i+1}" loading="lazy" onload="this.classList.remove('shim')" onerror="if(!this.dataset.tried){this.dataset.tried=1;this.src='https://corsproxy.io/?'+encodeURIComponent(this.src)}">`).join('');
+  }else{
+    document.getElementById('sr').style.display='none';
+    document.getElementById('pr').style.display='flex';
+    showPg(0);
   }
 }
-function showPgAt(n){
+function showPg(n){
   curPg=Math.max(0,Math.min(n,pages.length-1));
-  const img=document.getElementById('pimg');
+  const img=document.getElementById('pi');
   img.src=pages[curPg];img.classList.add('shim');
   img.onload=()=>img.classList.remove('shim');
-  document.getElementById('pcnt').textContent=`${curPg+1} / ${pages.length}`;
+  img.onerror=function(){if(!this.dataset.tried){this.dataset.tried=1;this.src='https://corsproxy.io/?'+encodeURIComponent(pages[curPg]);}};
+  document.getElementById('pc').textContent=`${curPg+1} / ${pages.length}`;
 }
-function prevPg(){showPgAt(curPg-1)}
-function nextPg(){showPgAt(curPg+1)}
+function prevPg(){showPg(curPg-1);}
+function nextPg(){showPg(curPg+1);}
 function setMode(m){
   rMode=m;
   document.getElementById('ms').classList.toggle('on',m==='scroll');
-  document.getElementById('mp2').classList.toggle('on',m==='page');
+  document.getElementById('mpg').classList.toggle('on',m==='page');
   renderReader();
 }
 function navCh(dir){
   const ni=curChIdx-dir;
   if(ni>=0&&ni<curChapters.length)openCh(ni);
 }
+async function openUpdate(src,rawMangaId,rawChId,provider){
+  rawMangaId=decodeURIComponent(rawMangaId);
+  rawChId=decodeURIComponent(rawChId);
+  provider=decodeURIComponent(provider);
+  showReader();
+  document.getElementById('rttl').textContent='Loading…';
+  document.getElementById('rl').style.display='flex';
+  const fullId=src==='cs'?`cs:${provider}:${rawMangaId}`:`${src}:${rawMangaId}`;
+  if(!curManga||curManga.id!==fullId){
+    const parts=fullId.split(':'),s=parts[0];
+    let det=null;
+    if(s==='md')det=await mdDetail(parts[1]);
+    else if(s==='ck')det=await ckDetail(parts[1]);
+    else if(s==='cs')det=await csDetail(parts[1],parts.slice(2).join(':'));
+    if(det){
+      curManga=det;
+      let chs=[];
+      if(s==='md')chs=await mdChapters(parts[1]);
+      else if(s==='ck')chs=await ckChapters(parts[1]);
+      else if(s==='cs')chs=await csChapters(parts[1],parts.slice(2).join(':'));
+      curChapters=chs.sort((a,b)=>parseFloat(b.num||0)-parseFloat(a.num||0));
+    }
+  }
+  const idx=curChapters.findIndex(c=>c.rawId===rawChId);
+  curChIdx=idx>=0?idx:0;
+  const ch=curChapters[curChIdx]||{src,rawId:rawChId,provider,num:''};
+  document.getElementById('rttl').textContent=curManga?.title||'';
+  document.getElementById('rci').textContent=ch.num?`Ch. ${ch.num}`:'';
+  navBtns();
+  await loadPages(ch);
+}
 
-/* ═══════════════════════════════════════════════════
-   NAV / PAGE MANAGEMENT
-═══════════════════════════════════════════════════ */
-function getCurPage(){
-  if(document.getElementById('hpage').style.display!=='none')return'home';
-  if(document.getElementById('bpage').style.display!=='none')return'browse';
-  if(document.getElementById('upage').style.display!=='none')return'updates';
-  return'home';
-}
-function hideAll(){
-  ['hpage','bpage','upage','dpage','rpage'].forEach(id=>document.getElementById(id).style.display='none');
-}
-function showHome(){
-  hideAll();document.getElementById('hpage').style.display='block';
-}
+/* ── NAV ────────────────────────────────────────── */
+function vis(id){return document.getElementById(id).style.display!=='none';}
+function getCur(){if(vis('hp'))return'home';if(vis('bp'))return'browse';if(vis('up'))return'updates';return'home';}
+function hideAll(){['hp','bp','up','dp','rp'].forEach(id=>document.getElementById(id).style.display='none');}
+function goHome(){hideAll();document.getElementById('hp').style.display='block';}
 function showBrowse(){
-  hideAll();document.getElementById('bpage').style.display='block';
-  if(!document.getElementById('bgrid').children.length||document.getElementById('bgrid').querySelector('.ldwrap'))loadBrowse();
+  hideAll();document.getElementById('bp').style.display='block';
+  if(!document.getElementById('bg').querySelector('.mc'))loadBrowse();
 }
-function showUpdatesPage(){
-  hideAll();document.getElementById('upage').style.display='block';loadUpdates();
-}
-function switchToUpdates(){
-  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
-  document.querySelectorAll('.ntab')[2].classList.add('on');
-  showUpdatesPage();
-}
-function showReaderPage(){
-  hideAll();document.getElementById('rpage').style.display='block';
-}
+function showUpdatesPage(){hideAll();document.getElementById('up').style.display='block';loadUpdates();}
+function showReader(){hideAll();document.getElementById('rp').style.display='block';}
 function goBack(){
   hideAll();
-  if(prevPageName==='browse')document.getElementById('bpage').style.display='block';
-  else if(prevPageName==='updates')document.getElementById('upage').style.display='block';
-  else document.getElementById('hpage').style.display='block';
+  if(prevPage==='browse'){document.getElementById('bp').style.display='block';}
+  else if(prevPage==='updates'){document.getElementById('up').style.display='block';}
+  else{document.getElementById('hp').style.display='block';}
 }
-function closeReader(){
-  hideAll();
-  document.getElementById('dpage').style.display='block';
+function closeReader(){hideAll();document.getElementById('dp').style.display='block';}
+function toUpdates(){
+  document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.nt')[2].classList.add('on');
+  showUpdatesPage();
 }
 function switchTab(tab,el){
-  document.querySelectorAll('.ntab').forEach(t=>t.classList.remove('on'));
+  document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');
-  if(tab==='home')showHome();
+  if(tab==='home')goHome();
   else if(tab==='browse')showBrowse();
   else showUpdatesPage();
 }
 
-/* ═══════════════════════════════════════════════════
-   SOURCE TOGGLE
-═══════════════════════════════════════════════════ */
-function toggleSrc(src,el){
-  activeSrcs[src]=!activeSrcs[src];
-  el.classList.toggle('on',activeSrcs[src]);
-  // reload current page
-  const cur=getCurPage();
-  if(cur==='home')loadHome();
-  else if(cur==='browse')loadBrowse();
-  else loadUpdates();
-}
-
-/* ═══════════════════════════════════════════════════
-   KEYBOARD
-═══════════════════════════════════════════════════ */
+/* ── KEYBOARD ───────────────────────────────────── */
 document.addEventListener('keydown',e=>{
-  if(document.getElementById('rpage').style.display==='block'){
+  if(vis('rp')){
     if(e.key==='ArrowRight'&&rMode==='page')nextPg();
     if(e.key==='ArrowLeft'&&rMode==='page')prevPg();
     if(e.key==='Escape')closeReader();
   }
 });
 
-/* ═══════════════════════════════════════════════════
-   INIT
-═══════════════════════════════════════════════════ */
-showHome();
+/* ── INIT ───────────────────────────────────────── */
+goHome();
 loadHome();
 </script>
 </body>

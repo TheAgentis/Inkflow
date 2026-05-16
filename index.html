@@ -753,21 +753,33 @@ function navBtns(){
   document.getElementById('rbb-ch').textContent=ch?.num?`Chapter ${ch.num}`:'';
 }
 async function loadPages(ch){
+  window._lastCh=ch;
   document.getElementById('sr').innerHTML='';
   document.getElementById('pr').style.display='none';
   document.getElementById('sr').style.display='flex';
   document.getElementById('rl').style.display='flex';
   let pg=[];
-  if(ch.src==='md')pg=await mdPages(ch.rawId).catch(()=>[]);
-  else if(ch.src==='ck')pg=await ckPages(ch.rawId).catch(()=>[]);
+  if(ch.src==='md') pg=await mdPages(ch.rawId).catch(()=>[]);
+  else if(ch.src==='ck') pg=await ckPages(ch.rawId).catch(()=>[]);
+
+  // if MD pages fail, silently try Comick as a fallback using manga title + chapter number
+  if(!pg.length && ch.src==='md' && curManga?.title && ch.num){
+    const ckRes=await ckSearch(curManga.title).catch(()=>[]);
+    if(ckRes.length){
+      const ckId=ckRes[0].rawId;
+      const ckChs=await ckChapters(ckId).catch(()=>[]);
+      const match=ckChs.find(c=>String(c.num)===String(ch.num));
+      if(match) pg=await ckPages(match.rawId).catch(()=>[]);
+    }
+  }
   document.getElementById('rl').style.display='none';
   if(!pg.length){
-    const link=ch.src==='md'?`https://mangadex.org/chapter/${ch.rawId}`:ch.src==='ck'?`https://comick.io/chapter/${ch.rawId}`:'';
     document.getElementById('sr').innerHTML=`<div style="text-align:center;padding:60px 20px;max-width:480px;margin:0 auto">
       <div style="font-size:40px;margin-bottom:14px;opacity:.2">📖</div>
-      <p style="font-size:15px;font-weight:500;margin-bottom:8px">Chapter unavailable</p>
-      <p style="color:var(--tx2);font-size:13px;line-height:1.7;margin-bottom:20px">This chapter is restricted or login-only on the original site.</p>
-      ${link?`<a href="${link}" target="_blank" rel="noopener" style="display:inline-block;padding:9px 20px;background:var(--acc);color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:500">Read on ${ch.src==='md'?'MangaDex':'Comick'} →</a>`:''}
+      <p style="font-size:15px;font-weight:500;margin-bottom:8px">Could not load chapter</p>
+      <p style="color:var(--tx2);font-size:13px;line-height:1.7;margin-bottom:20px">The chapter images failed to load. This can happen if the CDN host isn't in your proxy's allowlist. Try updating your proxy (see instructions), or try a different chapter.</p>
+      <button onclick="loadPages(window._lastCh)" style="display:inline-block;padding:9px 20px;background:var(--acc);color:#fff;border-radius:8px;border:none;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;margin-right:8px">↺ Retry</button>
+      <button onclick="navCh(1)" style="display:inline-block;padding:9px 20px;background:var(--sur2);color:var(--tx2);border-radius:8px;border:1px solid var(--bdr2);font-size:13px;font-weight:500;cursor:pointer;font-family:inherit">Next chapter →</button>
     </div>`;
     return;
   }

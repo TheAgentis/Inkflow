@@ -39,52 +39,42 @@ html,body{min-height:100%;background:var(--bg);color:var(--tx);font-family:'DM S
 .nt{padding:5px 13px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx2);transition:all .15s;border:none;background:none;font-family:'DM Sans',sans-serif}
 .nt:hover{color:var(--tx);background:var(--sur2)}
 .nt.on{color:var(--acc2);background:var(--accbg)}
-
 main{padding:20px}
 .sech{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .sect{font-family:'Syne',sans-serif;font-weight:700;font-size:17px}
 .sa{font-size:12px;color:var(--acc2);cursor:pointer;opacity:.8;transition:opacity .15s;text-decoration:none}
 .sa:hover{opacity:1}
-
-/* grid */
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:28px}
 @media(max-width:960px){.grid{grid-template-columns:repeat(4,1fr)}}
 @media(max-width:600px){.grid{grid-template-columns:repeat(3,1fr)}}
-
-/* card — always shows image or gradient placeholder */
 .mc{cursor:pointer}
-.mci{border-radius:var(--r);overflow:hidden;aspect-ratio:2/3;position:relative;border:1px solid var(--bdr);transition:border-color .2s,transform .2s;background:linear-gradient(135deg,var(--sur2),var(--sur3))}
+.mci{border-radius:var(--r);overflow:hidden;aspect-ratio:2/3;position:relative;border:1px solid var(--bdr);transition:border-color .2s,transform .2s;background:linear-gradient(135deg,var(--sur2) 0%,var(--sur3) 100%)}
 .mc:hover .mci{border-color:var(--acc);transform:translateY(-3px)}
-.mci img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .3s}
-.mci img.loaded{opacity:1}
-.mov{position:absolute;inset:0;background:linear-gradient(to top,rgba(4,4,10,.97) 0%,rgba(4,4,10,.3) 55%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:8px;z-index:1}
+.mci img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .4s}
+.mci img.vis{opacity:1}
+.ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;opacity:.15;pointer-events:none}
+.mov{position:absolute;inset:0;background:linear-gradient(to top,rgba(4,4,10,.97) 0%,rgba(4,4,10,.2) 55%,transparent 100%);display:flex;flex-direction:column;justify-content:flex-end;padding:8px;z-index:1}
 .mtt{font-family:'Syne',sans-serif;font-size:11px;font-weight:600;color:#fff;line-height:1.3;margin-bottom:3px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-/* placeholder icon shown when no image */
-.mci-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px;opacity:.18;z-index:0}
 .badge{display:inline-flex;align-items:center;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:600}
 .bm{background:rgba(124,106,247,.22);color:#a594fa;border:1px solid rgba(124,106,247,.35)}
 .bmh{background:rgba(62,207,142,.15);color:#3ecf8e;border:1px solid rgba(62,207,142,.3)}
 .bmc{background:rgba(240,164,41,.15);color:#f0a429;border:1px solid rgba(240,164,41,.3)}
 .bfr{background:rgba(96,165,250,.15);color:#60a5fa;border:1px solid rgba(96,165,250,.3)}
-
-/* updates */
 .ul{display:flex;flex-direction:column;gap:6px}
 .ur{display:flex;align-items:center;gap:12px;padding:9px 13px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bdr);cursor:pointer;transition:border-color .2s,background .2s}
 .ur:hover{border-color:var(--bdr2);background:var(--sur2)}
-.uth{width:38px;height:53px;object-fit:cover;border-radius:5px;flex-shrink:0;background:linear-gradient(135deg,var(--sur2),var(--sur3));display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--tx3);overflow:hidden;position:relative}
+.uth{width:38px;height:53px;border-radius:5px;flex-shrink:0;background:linear-gradient(135deg,var(--sur2),var(--sur3));overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--tx3)}
 .uth img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s}
-.uth img.loaded{opacity:1}
+.uth img.vis{opacity:1}
 .ui{flex:1;min-width:0}
 .utt{font-weight:500;font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .uc{font-size:12px;color:var(--acc2);margin-top:1px}
 .ut{font-size:11px;color:var(--tx3);flex-shrink:0}
-
-/* detail */
 #dp{display:none}
 .dh{display:flex;gap:22px;margin-bottom:26px}
-.dcv{width:160px;flex-shrink:0;border-radius:var(--rl);overflow:hidden;border:1px solid var(--bdr);aspect-ratio:2/3;background:linear-gradient(135deg,var(--sur2),var(--sur3));display:flex;align-items:center;justify-content:center;font-size:48px;color:var(--tx3);position:relative}
+.dcv{width:160px;flex-shrink:0;border-radius:var(--rl);overflow:hidden;border:1px solid var(--bdr);aspect-ratio:2/3;background:linear-gradient(135deg,var(--sur2),var(--sur3));display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--tx3);position:relative}
 .dcv img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s}
-.dcv img.loaded{opacity:1}
+.dcv img.vis{opacity:1}
 .din2{flex:1;min-width:0}
 .dtt{font-family:'Syne',sans-serif;font-weight:800;font-size:22px;line-height:1.2;margin-bottom:7px}
 .dm{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px}
@@ -104,8 +94,6 @@ main{padding:20px}
 .cn{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--acc2);min-width:70px}
 .ctit{flex:1;font-size:12px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cd{font-size:11px;color:var(--tx3);flex-shrink:0}
-
-/* reader */
 #rp{display:none;background:var(--bg);min-height:100vh}
 .rtb{display:flex;align-items:center;gap:10px;padding:0 14px;height:50px;background:rgba(8,8,15,.94);border-bottom:1px solid var(--bdr);position:sticky;top:0;z-index:50;backdrop-filter:blur(10px)}
 .rbk{display:flex;align-items:center;gap:5px;color:var(--tx2);cursor:pointer;font-size:13px;border:none;background:none;font-family:'DM Sans',sans-serif;transition:color .15s;padding:0}
@@ -120,37 +108,67 @@ main{padding:20px}
 .rn:hover:not(:disabled){border-color:var(--acc);color:var(--acc2)}
 .rn:disabled{opacity:.3;cursor:not-allowed}
 #sr{padding:12px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.spage{width:100%;max-width:800px;display:block;min-height:200px;background:var(--sur2);border-radius:4px}
-#pr{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 50px);padding:12px}
+.spage{width:100%;max-width:800px;display:block;min-height:60px;background:var(--sur2);border-radius:4px;opacity:0;transition:opacity .3s}
+.spage.vis{opacity:1}
+#pr{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 50px);padding:12px}
 .pw{position:relative;max-width:800px;width:100%}
-#pi{width:100%;display:block;background:var(--sur2);min-height:400px;border-radius:4px}
+#pi{width:100%;display:block;background:var(--sur2);min-height:400px;border-radius:4px;opacity:0;transition:opacity .3s}
+#pi.vis{opacity:1}
 .pn{position:absolute;top:0;bottom:0;width:40%;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .15s}
 .pn:hover{opacity:1}
 .pnl{left:0;background:linear-gradient(to right,rgba(0,0,0,.28),transparent)}
 .pnr{right:0;background:linear-gradient(to left,rgba(0,0,0,.28),transparent)}
 .pa{font-size:30px;color:rgba(255,255,255,.75)}
 .pc{text-align:center;margin-top:8px;font-size:12px;color:var(--tx3)}
-
 .gb{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:16px;scrollbar-width:none}
 .gb::-webkit-scrollbar{display:none}
 .gc{padding:4px 13px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;border:1px solid var(--bdr);background:var(--sur);color:var(--tx2)}
 .gc:hover{border-color:var(--bdr2);color:var(--tx)}
 .gc.on{background:var(--acc);border-color:var(--acc);color:#fff}
-
 .tbar{display:flex;border-bottom:1px solid var(--bdr);margin-bottom:18px}
 .tab{padding:8px 16px;font-size:13px;font-weight:500;cursor:pointer;color:var(--tx3);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;border-top:none;border-left:none;border-right:none;background:none;font-family:'DM Sans',sans-serif}
 .tab:hover{color:var(--tx2)}
 .tab.on{color:var(--acc2);border-bottom-color:var(--acc)}
-
 .spin{display:inline-block;width:20px;height:20px;border:2px solid var(--bdr2);border-top-color:var(--acc);border-radius:50%;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .lw{display:flex;align-items:center;justify-content:center;gap:10px;padding:36px;color:var(--tx3);font-size:13px}
 .emp{text-align:center;padding:48px 20px;color:var(--tx3);font-size:13px}
 .bk{display:inline-flex;align-items:center;gap:5px;margin-bottom:16px;font-size:13px;color:var(--tx2);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;transition:color .15s;padding:0}
 .bk:hover{color:var(--acc2)}
+/* reader bottom bar */
+.rbb{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 20px;border-top:1px solid var(--bdr);background:rgba(8,8,15,.94);margin-top:4px}
+.rbb-mid{display:flex;flex-direction:column;align-items:center;gap:2px}
+.rbb-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:600;color:var(--tx2)}
+.rbb-ch{font-size:11px;color:var(--tx3)}
+/* read history badge on chapter rows */
+.cr.read .cn{color:var(--tx3)}
+.cr.read{opacity:.7}
+.read-dot{width:6px;height:6px;border-radius:50%;background:var(--grn);flex-shrink:0;display:none}
+.cr.read .read-dot{display:block}
+/* history page */
+#hsp{display:none}
+.hist-empty{text-align:center;padding:60px 20px;color:var(--tx3);font-size:13px}
+.hrow{display:flex;align-items:center;gap:12px;padding:9px 13px;border-radius:var(--r);background:var(--sur);border:1px solid var(--bdr);cursor:pointer;transition:border-color .2s,background .2s;margin-bottom:6px}
+.hrow:hover{border-color:var(--bdr2);background:var(--sur2)}
+.hcov{width:38px;height:53px;border-radius:5px;flex-shrink:0;background:linear-gradient(135deg,var(--sur2),var(--sur3));overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--tx3)}
+.hcov img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .3s}
+.hcov img.vis{opacity:1}
+.hi{flex:1;min-width:0}
+.htt{font-weight:500;font-size:13px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hch{font-size:12px;color:var(--acc2);margin-top:1px}
+.htime{font-size:11px;color:var(--tx3);flex-shrink:0;text-align:right}
+.hclear{font-size:11px;color:var(--red,#e05c5c);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:4px 8px;border-radius:6px;transition:background .15s}
+.hclear:hover{background:rgba(224,92,92,.1)}
+/* proxy warning banner */
+.proxy-warn{background:rgba(240,164,41,.1);border:1px solid rgba(240,164,41,.3);border-radius:8px;padding:10px 16px;margin:16px 20px 0;font-size:13px;color:var(--gld);display:none}
+.proxy-warn a{color:var(--gld);font-weight:600}
 </style>
 </head>
 <body>
+
+<div class="proxy-warn" id="pwarn">
+  ⚠️ Proxy not configured yet — <a href="#" onclick="showProxyHelp();return false;">click here to set up your free proxy</a> (takes 2 min)
+</div>
 
 <nav class="bar">
   <a class="logo" href="#" onclick="goHome();return false;">Ink<em>flow</em></a>
@@ -163,80 +181,73 @@ main{padding:20px}
     <button class="nt on" onclick="switchTab('home',this)">Home</button>
     <button class="nt" onclick="switchTab('browse',this)">Browse</button>
     <button class="nt" onclick="switchTab('updates',this)">Updates</button>
+    <button class="nt" onclick="switchTab('history',this)">History</button>
   </div>
 </nav>
 
-<div id="hp">
-  <main>
-    <div class="tbar">
-      <button class="tab on" onclick="htab('popular',this)">🔥 Popular</button>
-      <button class="tab" onclick="htab('new',this)">🕐 New Releases</button>
-      <button class="tab" onclick="htab('top',this)">⭐ Top Rated</button>
-    </div>
-    <div class="sech"><h2 class="sect">Featured</h2></div>
-    <div id="hg" class="grid"><div class="lw"><div class="spin"></div> Loading…</div></div>
-    <div class="sech" style="margin-top:26px">
-      <h2 class="sect">Latest Updates</h2>
-      <a class="sa" href="#" onclick="toUpdates();return false;">See all →</a>
-    </div>
-    <div id="hu" class="ul"><div class="lw"><div class="spin"></div> Loading…</div></div>
-  </main>
-</div>
+<div id="hp"><main>
+  <div class="tbar">
+    <button class="tab on" onclick="htab('popular',this)">🔥 Popular</button>
+    <button class="tab" onclick="htab('new',this)">🕐 New Releases</button>
+    <button class="tab" onclick="htab('top',this)">⭐ Top Rated</button>
+  </div>
+  <div class="sech"><h2 class="sect">Featured</h2></div>
+  <div id="hg" class="grid"><div class="lw"><div class="spin"></div> Loading…</div></div>
+  <div class="sech" style="margin-top:26px">
+    <h2 class="sect">Latest Updates</h2>
+    <a class="sa" href="#" onclick="toUpdates();return false;">See all →</a>
+  </div>
+  <div id="hu" class="ul"><div class="lw"><div class="spin"></div> Loading…</div></div>
+</main></div>
 
-<div id="bp" style="display:none">
-  <main>
-    <div class="gb">
-      <span class="gc on" onclick="gfilt('',this)">All</span>
-      <span class="gc" onclick="gfilt('Action',this)">Action</span>
-      <span class="gc" onclick="gfilt('Adventure',this)">Adventure</span>
-      <span class="gc" onclick="gfilt('Comedy',this)">Comedy</span>
-      <span class="gc" onclick="gfilt('Drama',this)">Drama</span>
-      <span class="gc" onclick="gfilt('Fantasy',this)">Fantasy</span>
-      <span class="gc" onclick="gfilt('Horror',this)">Horror</span>
-      <span class="gc" onclick="gfilt('Mystery',this)">Mystery</span>
-      <span class="gc" onclick="gfilt('Romance',this)">Romance</span>
-      <span class="gc" onclick="gfilt('Sci-Fi',this)">Sci-Fi</span>
-      <span class="gc" onclick="gfilt('Slice of Life',this)">Slice of Life</span>
-      <span class="gc" onclick="gfilt('Sports',this)">Sports</span>
-      <span class="gc" onclick="gfilt('Supernatural',this)">Supernatural</span>
-      <span class="gc" onclick="gfilt('Thriller',this)">Thriller</span>
-    </div>
-    <div id="bg" class="grid"><div class="lw"><div class="spin"></div> Loading…</div></div>
-    <div id="bmore" style="text-align:center;margin-top:18px;display:none">
-      <button class="db" onclick="browseMore()">Load more</button>
-    </div>
-  </main>
-</div>
+<div id="bp" style="display:none"><main>
+  <div class="gb">
+    <span class="gc on" onclick="gfilt('',this)">All</span>
+    <span class="gc" onclick="gfilt('Action',this)">Action</span>
+    <span class="gc" onclick="gfilt('Adventure',this)">Adventure</span>
+    <span class="gc" onclick="gfilt('Comedy',this)">Comedy</span>
+    <span class="gc" onclick="gfilt('Drama',this)">Drama</span>
+    <span class="gc" onclick="gfilt('Fantasy',this)">Fantasy</span>
+    <span class="gc" onclick="gfilt('Horror',this)">Horror</span>
+    <span class="gc" onclick="gfilt('Mystery',this)">Mystery</span>
+    <span class="gc" onclick="gfilt('Romance',this)">Romance</span>
+    <span class="gc" onclick="gfilt('Sci-Fi',this)">Sci-Fi</span>
+    <span class="gc" onclick="gfilt('Slice of Life',this)">Slice of Life</span>
+    <span class="gc" onclick="gfilt('Sports',this)">Sports</span>
+    <span class="gc" onclick="gfilt('Supernatural',this)">Supernatural</span>
+    <span class="gc" onclick="gfilt('Thriller',this)">Thriller</span>
+  </div>
+  <div id="bg" class="grid"><div class="lw"><div class="spin"></div> Loading…</div></div>
+  <div id="bmore" style="text-align:center;margin-top:18px;display:none">
+    <button class="db" onclick="browseMore()">Load more</button>
+  </div>
+</main></div>
 
-<div id="up" style="display:none">
-  <main>
-    <div class="sech">
-      <h2 class="sect">Latest Chapter Updates</h2>
-      <button class="db" style="font-size:12px;padding:5px 12px" onclick="loadUpdates()">↺ Refresh</button>
-    </div>
-    <div id="ul" class="ul"><div class="lw"><div class="spin"></div> Loading…</div></div>
-  </main>
-</div>
+<div id="up" style="display:none"><main>
+  <div class="sech">
+    <h2 class="sect">Latest Chapter Updates</h2>
+    <button class="db" style="font-size:12px;padding:5px 12px" onclick="loadUpdates()">↺ Refresh</button>
+  </div>
+  <div id="ul" class="ul"><div class="lw"><div class="spin"></div> Loading…</div></div>
+</main></div>
 
-<div id="dp">
-  <main>
-    <button class="bk" onclick="goBack()">← Back</button>
-    <div class="dh">
-      <div class="dcv" id="dcv-wrap">📖<img id="dcv" src="" alt=""></div>
-      <div class="din2">
-        <h1 class="dtt" id="dtt">Loading…</h1>
-        <div class="dm" id="dm"></div>
-        <p class="dd" id="dd"></p>
-        <div class="dbs" id="dbs"></div>
-      </div>
+<div id="dp"><main>
+  <button class="bk" onclick="goBack()">← Back</button>
+  <div class="dh">
+    <div class="dcv">📖<img id="dcv" src="" alt=""></div>
+    <div class="din2">
+      <h1 class="dtt" id="dtt">Loading…</h1>
+      <div class="dm" id="dm"></div>
+      <p class="dd" id="dd"></p>
+      <div class="dbs" id="dbs"></div>
     </div>
-    <div class="chh">
-      <span class="cht" id="cht">Chapters</span>
-      <button class="sb" onclick="togSort()" id="sb">↑ Newest first</button>
-    </div>
-    <div id="chl" class="chl"><div class="lw"><div class="spin"></div> Loading…</div></div>
-  </main>
-</div>
+  </div>
+  <div class="chh">
+    <span class="cht" id="cht">Chapters</span>
+    <button class="sb" onclick="togSort()" id="sb">↑ Newest first</button>
+  </div>
+  <div id="chl" class="chl"><div class="lw"><div class="spin"></div> Loading…</div></div>
+</main></div>
 
 <div id="rp">
   <div class="rtb">
@@ -253,7 +264,7 @@ main{padding:20px}
     </div>
   </div>
   <div id="sr"></div>
-  <div id="pr" style="display:none">
+  <div id="pr">
     <div class="pw">
       <img id="pi" src="" alt="Page">
       <div class="pn pnl" onclick="prevPg()"><span class="pa">‹</span></div>
@@ -262,60 +273,103 @@ main{padding:20px}
     <p class="pc" id="pc"></p>
   </div>
   <div id="rl" class="lw" style="display:none"><div class="spin"></div> Loading pages…</div>
+  <!-- BOTTOM NAV BAR -->
+  <div class="rbb">
+    <button class="rn" onclick="closeReader()">← Back</button>
+    <div class="rbb-mid">
+      <span class="rbb-title" id="rbb-title">—</span>
+      <span class="rbb-ch" id="rbb-ch"></span>
+    </div>
+    <div style="display:flex;gap:4px">
+      <button class="rn" id="pb2" onclick="navCh(-1)">‹ Prev Ch</button>
+      <button class="rn" id="nb2" onclick="navCh(1)" style="background:var(--acc);border-color:var(--acc);color:#fff">Next Ch ›</button>
+    </div>
+  </div>
+</div>
+
+<!-- HISTORY PAGE -->
+<div id="hsp" style="display:none"><main>
+  <div class="sech">
+    <h2 class="sect">Reading History</h2>
+    <button class="hclear" onclick="clearHistory()">Clear all</button>
+  </div>
+  <div id="hist-list"></div>
+</main></div>
+
+<!-- PROXY HELP MODAL -->
+<div id="ph-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;overflow-y:auto;padding:40px 20px">
+  <div style="max-width:560px;margin:0 auto;background:var(--sur);border:1px solid var(--bdr2);border-radius:var(--rl);padding:28px">
+    <h2 style="font-family:'Syne',sans-serif;font-size:20px;margin-bottom:12px">Set up your free proxy</h2>
+    <p style="font-size:13px;color:var(--tx2);line-height:1.7;margin-bottom:20px">MangaDex blocks direct API calls from browsers. You need a tiny free proxy on Vercel. Takes about 2 minutes.</p>
+    <div style="counter-reset:steps">
+      <div style="display:flex;gap:12px;margin-bottom:16px"><div style="width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">1</div><div style="font-size:13px;color:var(--tx2);padding-top:4px">Go to <a href="https://github.com/new" target="_blank" style="color:var(--acc2)">github.com/new</a> and create a new <strong style="color:var(--tx)">public</strong> repo called <code style="background:var(--sur2);padding:1px 6px;border-radius:4px;font-size:12px">inkflow-proxy</code></div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px"><div style="width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">2</div><div style="font-size:13px;color:var(--tx2);padding-top:4px">Inside that repo, create a file at <code style="background:var(--sur2);padding:1px 6px;border-radius:4px;font-size:12px">api/proxy.js</code> — use the file I gave you in the download.</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:16px"><div style="width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">3</div><div style="font-size:13px;color:var(--tx2);padding-top:4px">Go to <a href="https://vercel.com" target="_blank" style="color:var(--acc2)">vercel.com</a>, sign up free, click <strong style="color:var(--tx)">Add New → Project</strong>, import your <code style="background:var(--sur2);padding:1px 6px;border-radius:4px;font-size:12px">inkflow-proxy</code> repo and deploy.</div></div>
+      <div style="display:flex;gap:12px;margin-bottom:20px"><div style="width:26px;height:26px;border-radius:50%;background:var(--acc);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">4</div><div style="font-size:13px;color:var(--tx2);padding-top:4px">Vercel gives you a URL like <code style="background:var(--sur2);padding:1px 6px;border-radius:4px;font-size:12px">inkflow-proxy.vercel.app</code>. Paste it below:</div></div>
+    </div>
+    <input id="proxy-input" type="text" placeholder="https://inkflow-proxy.vercel.app" style="width:100%;height:38px;padding:0 12px;background:var(--sur2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx);font-family:'DM Sans',sans-serif;font-size:14px;outline:none;margin-bottom:12px">
+    <div style="display:flex;gap:8px">
+      <button onclick="saveProxy()" style="flex:1;padding:9px;background:var(--acc);border:none;border-radius:8px;color:#fff;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer">Save & Reload</button>
+      <button onclick="closeModal()" style="padding:9px 16px;background:var(--sur2);border:1px solid var(--bdr2);border-radius:8px;color:var(--tx2);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer">Cancel</button>
+    </div>
+  </div>
 </div>
 
 <script>
-/* ════════════════════════════════════════════
-   CORS PROXY — auto-picks fastest working one
-════════════════════════════════════════════ */
-const PROXIES = [
-  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-  url => `https://thingproxy.freeboard.io/fetch/${url}`
-];
-let pIdx = 0;
+/* ════════════════════════════════════
+   PROXY CONFIG — stored in localStorage
+════════════════════════════════════ */
+let PROXY_BASE = localStorage.getItem('inkflow_proxy') || '';
 
-async function pFetch(url, isImg=false) {
-  for (let attempt = 0; attempt < PROXIES.length; attempt++) {
-    const i = (pIdx + attempt) % PROXIES.length;
-    try {
-      const r = await fetch(PROXIES[i](url), { signal: AbortSignal.timeout(12000) });
-      if (r.ok) { pIdx = i; return r; }
-    } catch {}
+function proxyURL(url) {
+  if (!PROXY_BASE) return null;
+  return PROXY_BASE.replace(/\/$/, '') + '/api/proxy?url=' + encodeURIComponent(url);
+}
+
+async function apiFetch(url) {
+  const proxied = proxyURL(url);
+  if (!proxied) throw new Error('NO_PROXY');
+  const r = await fetch(proxied, { signal: AbortSignal.timeout(15000) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+// For images — proxy them through our Vercel proxy so they load
+function imgSrc(url) {
+  if (!url) return '';
+  const p = proxyURL(url);
+  return p || url; // fallback to direct if no proxy (won't work but shows intent)
+}
+
+function showProxyHelp() {
+  document.getElementById('ph-modal').style.display = 'block';
+  const saved = localStorage.getItem('inkflow_proxy') || '';
+  if (saved) document.getElementById('proxy-input').value = saved;
+}
+function closeModal() {
+  document.getElementById('ph-modal').style.display = 'none';
+}
+function saveProxy() {
+  let v = document.getElementById('proxy-input').value.trim().replace(/\/$/, '');
+  if (!v) return;
+  if (!v.startsWith('http')) v = 'https://' + v;
+  localStorage.setItem('inkflow_proxy', v);
+  PROXY_BASE = v;
+  closeModal();
+  location.reload();
+}
+
+function checkProxy() {
+  if (!PROXY_BASE) {
+    document.getElementById('pwarn').style.display = 'block';
   }
-  throw new Error('All proxies failed: ' + url);
-}
-async function pJSON(url) {
-  const r = await pFetch(url);
-  const text = await r.text();
-  try { return JSON.parse(text); }
-  catch { throw new Error('Invalid JSON from ' + url); }
 }
 
-/* ════════════════════════════════════════════
-   IMAGE LOADING — always shows something
-════════════════════════════════════════════ */
-function loadImg(img, src) {
-  if (!src) return; // keep placeholder icon
-  img.onload = () => img.classList.add('loaded');
-  img.onerror = () => {
-    // try proxying through corsproxy on failure
-    if (!img.dataset.retried) {
-      img.dataset.retried = '1';
-      img.src = `https://corsproxy.io/?${encodeURIComponent(src)}`;
-    }
-    // on second failure just stay with placeholder
-  };
-  img.src = src;
-}
-
-/* ════════════════════════════════════════════
+/* ════════════════════════════════════
    STATE
-════════════════════════════════════════════ */
-const MDEX   = 'https://api.mangadex.org';
-const COMICK  = 'https://api.comick.fun';
-// MangaReader via a community-hosted Consumet mirror
-const MREADER = 'https://consumet-api-alpha.vercel.app';
+════════════════════════════════════ */
+const MDEX  = 'https://api.mangadex.org';
+const COMICK = 'https://api.comick.fun';
 
 let curManga=null, curChapters=[], curChIdx=0;
 let pages=[], curPg=0, rMode='scroll';
@@ -324,267 +378,182 @@ let bOff=0, bPage=1, bGenre='', bGenreId='';
 let sortAsc=false, tagMap={};
 let refreshTimer=null, searchTimer=null;
 
-/* ════════════════════════════════════════════
+/* ════════════════════════════════════
    HELPERS
-════════════════════════════════════════════ */
+════════════════════════════════════ */
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function rt(iso){
   if(!iso)return'';
   const d=Date.now()-new Date(iso).getTime(),m=Math.floor(d/60000);
-  if(m<1)return'just now'; if(m<60)return m+'m ago';
-  const h=Math.floor(m/60); if(h<24)return h+'h ago';
-  const dy=Math.floor(h/24); if(dy<30)return dy+'d ago';
+  if(m<1)return'just now';if(m<60)return m+'m ago';
+  const h=Math.floor(m/60);if(h<24)return h+'h ago';
+  const dy=Math.floor(h/24);if(dy<30)return dy+'d ago';
   return new Date(iso).toLocaleDateString();
 }
 function tbadge(lang){
-  const mp={'ja':['manga','bm'],'ko':['manhwa','bmh'],'zh':['manhua','bmc'],'zh-hk':['manhua','bmc'],'en':['webtoon','bfr']};
+  const mp={'ja':['manga','bm'],'ko':['manhwa','bmh'],'zh':['manhua','bmc'],'zh-hk':['manhua','bmc']};
   const[l,c]=mp[lang]||['manga','bm'];
-  return `<span class="badge ${c}">${l}</span>`;
+  return`<span class="badge ${c}">${l}</span>`;
 }
 function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,30)}
-function dedup(arr){
-  const seen=new Set();
-  return arr.filter(i=>{const k=norm(i.title); if(seen.has(k))return false; seen.add(k); return true;});
-}
-// Skip titles that are known paid/licensed (Viz, Shueisha MANGA Plus exclusives)
-const BLOCKED_PUBS = ['viz','manga plus','shonen jump+','azuki','comikey'];
-function isBlocked(m){
-  const r = (m.relationships||[]);
-  // check if any publisher is a known paid-only publisher
-  return false; // we can't reliably detect this from API — filter at chapter level instead
-}
+function dedup(arr){const seen=new Set();return arr.filter(i=>{const k=norm(i.title);if(seen.has(k))return false;seen.add(k);return true;});}
 
-/* ════════════════════════════════════════════
-   MANGADEX API
-════════════════════════════════════════════ */
-async function mdFetch(path){ return pJSON(MDEX + path); }
-function mdCov(m, sz='256'){
+/* ════════════════════════════════════
+   MANGADEX
+════════════════════════════════════ */
+function mdCov(m,sz='256'){
   const r=(m.relationships||[]).find(r=>r.type==='cover_art');
-  if(!r?.attributes?.fileName)return '';
-  return `https://uploads.mangadex.org/covers/${m.id}/${r.attributes.fileName}.${sz}.jpg`;
+  if(!r?.attributes?.fileName)return'';
+  return imgSrc(`https://uploads.mangadex.org/covers/${m.id}/${r.attributes.fileName}.${sz}.jpg`);
 }
-function mdTit(m){
-  const t=m.attributes?.title||{};
-  return t.en||t['ja-ro']||t.ja||t.ko||Object.values(t)[0]||'Unknown';
-}
-function mdToCard(m){
-  return {id:'md:'+m.id, rawId:m.id, src:'md', title:mdTit(m), cover:mdCov(m,'512'), lang:m.attributes?.originalLanguage, status:m.attributes?.status||''};
-}
+function mdTit(m){const t=m.attributes?.title||{};return t.en||t['ja-ro']||t.ja||t.ko||Object.values(t)[0]||'Unknown';}
+function mdCard(m){return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),lang:m.attributes?.originalLanguage,status:m.attributes?.status||''};}
+
 async function mdFeatured(mode){
-  const ord = mode==='popular'?'followedCount':mode==='top'?'rating':'createdAt';
-  // only safe+suggestive = free content, exclude licensed-only
-  const d = await mdFetch(`/manga?limit=24&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc`).catch(()=>null);
-  return (d?.data||[]).filter(m=>mdCov(m,'512')).map(mdToCard); // only include those with a cover
+  const ord=mode==='popular'?'followedCount':mode==='top'?'rating':'createdAt';
+  const d=await apiFetch(`${MDEX}/manga?limit=24&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc`).catch(()=>null);
+  return(d?.data||[]).map(mdCard);
 }
 async function mdUpdates(){
-  const d = await mdFetch('/chapter?limit=50&translatedLanguage[]=en&order[publishAt]=desc&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive').catch(()=>null);
+  const d=await apiFetch(`${MDEX}/chapter?limit=50&translatedLanguage[]=en&order[publishAt]=desc&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
   if(!d?.data)return[];
-  const seen=new Set(), rows=[];
+  const seen=new Set(),rows=[];
   for(const c of d.data){
-    const mr=(c.relationships||[]).find(r=>r.type==='manga'); if(!mr)continue;
-    const k=mr.id+':'+c.attributes.chapter;
-    if(seen.has(k))continue; seen.add(k);
-    rows.push({mangaId:mr.id, rawChId:c.id, chNum:c.attributes.chapter, chTitle:c.attributes.title||'', time:c.attributes.publishAt, src:'md', _mr:mr});
+    const mr=(c.relationships||[]).find(r=>r.type==='manga');if(!mr)continue;
+    const k=mr.id+':'+c.attributes.chapter;if(seen.has(k))continue;seen.add(k);
+    rows.push({mangaId:mr.id,rawChId:c.id,chNum:c.attributes.chapter,chTitle:c.attributes.title||'',time:c.attributes.publishAt,src:'md',_mr:mr});
   }
   const ids=[...new Set(rows.map(r=>r.mangaId))];
-  const md = await mdFetch('/manga?ids[]='+ids.slice(0,30).join('&ids[]=')+'&includes[]=cover_art&limit=30').catch(()=>null);
-  const mm={}; (md?.data||[]).forEach(m=>mm[m.id]=m);
-  return rows.map(r=>{
-    const m=mm[r.mangaId]||r._mr;
-    const cover=mdCov(m,'128');
-    return {...r, title:mdTit(m), cover};
-  }).filter(r=>r.title); // only rows with a title
+  const md=await apiFetch(`${MDEX}/manga?ids[]=${ids.slice(0,30).join('&ids[]=')}&includes[]=cover_art&limit=30`).catch(()=>null);
+  const mm={};(md?.data||[]).forEach(m=>mm[m.id]=m);
+  return rows.map(r=>{const m=mm[r.mangaId]||r._mr;return{...r,title:mdTit(m),cover:mdCov(m,'128')};});
 }
 async function mdSearch(q){
-  const d=await mdFetch(`/manga?title=${encodeURIComponent(q)}&limit=6&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en`).catch(()=>null);
-  return (d?.data||[]).map(mdToCard);
+  const d=await apiFetch(`${MDEX}/manga?title=${encodeURIComponent(q)}&limit=6&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en`).catch(()=>null);
+  return(d?.data||[]).map(mdCard);
 }
 async function mdBrowse(off,gid){
-  let url=`/manga?limit=18&offset=${off}&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[followedCount]=desc`;
-  if(gid) url+=`&includedTags[]=${gid}`;
-  const d=await mdFetch(url).catch(()=>null);
-  return (d?.data||[]).map(mdToCard);
+  let url=`${MDEX}/manga?limit=18&offset=${off}&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[followedCount]=desc`;
+  if(gid)url+=`&includedTags[]=${gid}`;
+  const d=await apiFetch(url).catch(()=>null);
+  return(d?.data||[]).map(mdCard);
 }
 async function mdDetail(id){
-  const d=await mdFetch(`/manga/${id}?includes[]=cover_art&includes[]=author`).catch(()=>null);
+  const d=await apiFetch(`${MDEX}/manga/${id}?includes[]=cover_art&includes[]=author`).catch(()=>null);
   if(!d?.data)return null;
   const m=d.data;
-  return {id:'md:'+m.id, rawId:m.id, src:'md', title:mdTit(m), cover:mdCov(m,'512'),
-    lang:m.attributes?.originalLanguage, status:m.attributes?.status||'', year:m.attributes?.year||'',
+  return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),
+    lang:m.attributes?.originalLanguage,status:m.attributes?.status||'',year:m.attributes?.year||'',
     desc:m.attributes?.description?.en||Object.values(m.attributes?.description||{})[0]||'',
     author:(m.relationships||[]).find(r=>r.type==='author')?.attributes?.name||'Unknown'};
 }
 async function mdChapters(id){
-  let all=[], off=0;
+  let all=[],off=0;
   while(true){
-    const d=await mdFetch(`/manga/${id}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=desc&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
+    const d=await apiFetch(`${MDEX}/manga/${id}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=desc&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
     if(!d?.data?.length)break;
-    all=all.concat(d.data);
-    if(d.data.length<96)break;
-    off+=96; if(off>960)break;
+    all=all.concat(d.data);if(d.data.length<96)break;off+=96;if(off>960)break;
   }
-  // Deduplicate by chapter number, one per number
   const seen={};
-  for(const c of all){const n=c.attributes.chapter||'0'; if(!seen[n])seen[n]=c;}
+  for(const c of all){const n=c.attributes.chapter||'0';if(!seen[n])seen[n]=c;}
   return Object.values(seen).map(c=>({id:c.id,rawId:c.id,src:'md',num:c.attributes.chapter,title:c.attributes.title||'',date:c.attributes.publishAt}));
 }
 async function mdPages(id){
-  const d=await mdFetch(`/at-home/server/${id}`).catch(()=>null);
-  if(!d?.chapter)return [];
+  const d=await apiFetch(`${MDEX}/at-home/server/${id}`).catch(()=>null);
+  if(!d?.chapter)return[];
   const{baseUrl,chapter:{hash,dataSaver,data}}=d;
-  const pg=dataSaver||data, folder=dataSaver?'data-saver':'data';
-  return pg.map(p=>`${baseUrl}/${folder}/${hash}/${p}`);
+  const pg=dataSaver||data,folder=dataSaver?'data-saver':'data';
+  // proxy every image URL through our Vercel proxy
+  return pg.map(p=>imgSrc(`${baseUrl}/${folder}/${hash}/${p}`));
 }
 
-/* ════════════════════════════════════════════
-   COMICK API (mirrors AsuraScans + MangaFire titles)
-════════════════════════════════════════════ */
-async function ckFetch(path){ return pJSON(COMICK + path); }
+/* ════════════════════════════════════
+   COMICK
+════════════════════════════════════ */
 function ckCov(i){
-  if(i.md_covers?.[0]?.b2key) return `https://meo.comick.pictures/${i.md_covers[0].b2key}`;
-  return i.cover_url||'';
+  const key=i.md_covers?.[0]?.b2key;
+  if(key)return imgSrc(`https://meo.comick.pictures/${key}`);
+  return i.cover_url?imgSrc(i.cover_url):'';
 }
-function ckToCard(i){
-  return {id:'ck:'+i.hid, rawId:i.hid, src:'ck',
-    title:i.title||i.slug||'', cover:ckCov(i),
-    lang:i.country||'jp', status:i.status===1?'ongoing':'completed'};
-}
+function ckCard(i){return{id:'ck:'+i.hid,rawId:i.hid,src:'ck',title:i.title||i.slug||'',cover:ckCov(i),lang:i.country||'ja',status:i.status===1?'ongoing':'completed'};}
 async function ckFeatured(){
-  const d=await ckFetch('/v1.0/search?limit=24&page=1&sort=view&lang=en').catch(()=>null);
-  return (d||[]).filter(i=>ckCov(i)).map(ckToCard); // only with cover
+  const d=await apiFetch(`${COMICK}/v1.0/search?limit=24&page=1&sort=view&lang=en`).catch(()=>null);
+  return(d||[]).map(ckCard);
 }
 async function ckUpdates(){
-  const d=await ckFetch('/v1.0/chapter?page=1&limit=50&lang=en').catch(()=>null);
+  const d=await apiFetch(`${COMICK}/v1.0/chapter?page=1&limit=50&lang=en`).catch(()=>null);
   if(!d)return[];
   return d.filter(c=>c.md_comics?.title).map(c=>({
-    mangaId:'ck:'+c.md_comics.hid, rawMangaId:c.md_comics.hid,
-    rawChId:c.hid, chNum:c.chap, chTitle:c.title||'',
-    time:c.created_at, src:'ck',
+    mangaId:'ck:'+c.md_comics.hid,rawMangaId:c.md_comics.hid,
+    rawChId:c.hid,chNum:c.chap,chTitle:c.title||'',time:c.created_at,src:'ck',
     title:c.md_comics.title,
-    cover: c.md_comics.md_covers?.[0]?.b2key ? `https://meo.comick.pictures/${c.md_comics.md_covers[0].b2key}` : ''
+    cover:c.md_comics.md_covers?.[0]?.b2key?imgSrc(`https://meo.comick.pictures/${c.md_comics.md_covers[0].b2key}`):'',
   }));
 }
 async function ckSearch(q){
-  const d=await ckFetch(`/v1.0/search?q=${encodeURIComponent(q)}&limit=6&lang=en`).catch(()=>null);
-  return (d||[]).map(ckToCard);
+  const d=await apiFetch(`${COMICK}/v1.0/search?q=${encodeURIComponent(q)}&limit=6&lang=en`).catch(()=>null);
+  return(d||[]).map(ckCard);
 }
-async function ckBrowse(pg, genre){
-  let url=`/v1.0/search?limit=18&page=${pg}&sort=view&lang=en`;
-  if(genre) url+=`&genres=${encodeURIComponent(genre)}`;
-  const d=await ckFetch(url).catch(()=>null);
-  return (d||[]).filter(i=>ckCov(i)).map(ckToCard);
+async function ckBrowse(pg,genre){
+  let url=`${COMICK}/v1.0/search?limit=18&page=${pg}&sort=view&lang=en`;
+  if(genre)url+=`&genres=${encodeURIComponent(genre)}`;
+  const d=await apiFetch(url).catch(()=>null);
+  return(d||[]).map(ckCard);
 }
 async function ckDetail(id){
-  const d=await ckFetch(`/comic/${id}?tachiyomi=true`).catch(()=>null);
+  const d=await apiFetch(`${COMICK}/comic/${id}?tachiyomi=true`).catch(()=>null);
   if(!d?.comic)return null;
   const c=d.comic;
-  return {id:'ck:'+c.hid, rawId:c.hid, src:'ck', title:c.title||c.slug, cover:ckCov(c),
-    lang:c.country||'jp', status:c.status===1?'ongoing':'completed',
-    desc:c.desc||'', author:d.authors?.[0]?.name||'Unknown'};
+  return{id:'ck:'+c.hid,rawId:c.hid,src:'ck',title:c.title||c.slug,cover:ckCov(c),
+    lang:c.country||'ja',status:c.status===1?'ongoing':'completed',desc:c.desc||'',author:d.authors?.[0]?.name||'Unknown'};
 }
 async function ckChapters(id){
-  // fetch multiple pages to get full list
-  let all=[], page=1;
+  let all=[],page=1;
   while(true){
-    const d=await ckFetch(`/comic/${id}/chapters?lang=en&limit=200&page=${page}`).catch(()=>null);
+    const d=await apiFetch(`${COMICK}/comic/${id}/chapters?lang=en&limit=200&page=${page}`).catch(()=>null);
     if(!d?.chapters?.length)break;
-    all=all.concat(d.chapters);
-    if(d.chapters.length<200)break;
-    page++;if(page>10)break;
+    all=all.concat(d.chapters);if(d.chapters.length<200)break;page++;if(page>10)break;
   }
   return all.map(c=>({id:'ck:'+c.hid,rawId:c.hid,src:'ck',num:c.chap,title:c.title||'',date:c.created_at}));
 }
 async function ckPages(id){
-  const d=await ckFetch(`/chapter/${id}?tachiyomi=true`).catch(()=>null);
-  return (d?.chapter?.images||[]).map(i=>i.url).filter(Boolean);
+  const d=await apiFetch(`${COMICK}/chapter/${id}?tachiyomi=true`).catch(()=>null);
+  return(d?.chapter?.images||[]).map(i=>imgSrc(i.url)).filter(Boolean);
 }
 
-/* ════════════════════════════════════════════
-   MANGAREADER via community Consumet instance
-════════════════════════════════════════════ */
-async function mrFetch(path){ return pJSON(MREADER + path); }
-function mrToCard(m){
-  return {id:'mr:'+m.id, rawId:m.id, src:'mr',
-    title:m.title||'', cover:m.image||'', lang:'ja', status:m.status||''};
-}
-async function mrFeatured(){
-  const d=await mrFetch('/manga/mangareader?page=1').catch(()=>null);
-  return (d?.results||[]).filter(m=>m.image).map(mrToCard);
-}
-async function mrUpdates(){
-  const d=await mrFetch('/manga/mangareader?type=latest&page=1').catch(()=>null);
-  return (d?.results||[]).filter(m=>m.image&&m.latestChapter).map(m=>({
-    mangaId:'mr:'+m.id, rawMangaId:m.id,
-    rawChId:m.latestChapter?.id||m.id, chNum:m.latestChapter?.chapterNumber||'',
-    chTitle:'', time:m.latestChapter?.releaseDate||'',
-    src:'mr', title:m.title||'', cover:m.image||''
-  }));
-}
-async function mrSearch(q){
-  const d=await mrFetch(`/manga/mangareader/${encodeURIComponent(q)}`).catch(()=>null);
-  return (d?.results||[]).filter(m=>m.image).map(mrToCard);
-}
-async function mrDetail(id){
-  const d=await mrFetch(`/manga/mangareader/info?id=${encodeURIComponent(id)}`).catch(()=>null);
-  if(!d?.title)return null;
-  return {id:'mr:'+id, rawId:id, src:'mr', title:d.title, cover:d.image||'',
-    lang:'ja', status:d.status||'', desc:d.description||'',
-    author:(d.authors||[]).join(', ')||'Unknown'};
-}
-async function mrChapters(id){
-  const d=await mrFetch(`/manga/mangareader/info?id=${encodeURIComponent(id)}`).catch(()=>null);
-  return (d?.chapters||[]).map(c=>({id:'mr:'+c.id,rawId:c.id,src:'mr',num:c.chapterNumber,title:c.title||'',date:c.releaseDate||''}));
-}
-async function mrPages(id){
-  const d=await mrFetch(`/manga/mangareader/read?chapterId=${encodeURIComponent(id)}`).catch(()=>null);
-  if(!Array.isArray(d))return[];
-  return d.map(p=>p.img||p.url||p).filter(s=>typeof s==='string'&&s.startsWith('http'));
-}
-
-/* ════════════════════════════════════════════
-   UNIFIED — all 3 sources merged silently
-════════════════════════════════════════════ */
+/* ════════════════════════════════════
+   UNIFIED
+════════════════════════════════════ */
 async function allFeatured(mode){
-  const [a,b,c]=await Promise.allSettled([mdFeatured(mode), ckFeatured(), mrFeatured()]);
-  return dedup([
-    ...(a.status==='fulfilled'?a.value:[]),
-    ...(b.status==='fulfilled'?b.value:[]),
-    ...(c.status==='fulfilled'?c.value:[])
-  ]);
+  const[a,b]=await Promise.allSettled([mdFeatured(mode),ckFeatured()]);
+  return dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
 }
 async function allUpdates(){
-  const [a,b,c]=await Promise.allSettled([mdUpdates(), ckUpdates(), mrUpdates()]);
-  return [
-    ...(a.status==='fulfilled'?a.value:[]),
-    ...(b.status==='fulfilled'?b.value:[]),
-    ...(c.status==='fulfilled'?c.value:[])
-  ].sort((x,y)=>new Date(y.time||0)-new Date(x.time||0)).slice(0,60);
+  const[a,b]=await Promise.allSettled([mdUpdates(),ckUpdates()]);
+  return[...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]
+    .sort((x,y)=>new Date(y.time||0)-new Date(x.time||0)).slice(0,60);
 }
 async function allSearch(q){
-  const [a,b,c]=await Promise.allSettled([mdSearch(q), ckSearch(q), mrSearch(q)]);
-  return dedup([
-    ...(a.status==='fulfilled'?a.value:[]),
-    ...(b.status==='fulfilled'?b.value:[]),
-    ...(c.status==='fulfilled'?c.value:[])
-  ]);
+  const[a,b]=await Promise.allSettled([mdSearch(q),ckSearch(q)]);
+  return dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
 }
-async function allBrowse(off, pg, gid, genre){
-  const [a,b]=await Promise.allSettled([mdBrowse(off,gid), ckBrowse(pg,genre)]);
-  return dedup([
-    ...(a.status==='fulfilled'?a.value:[]),
-    ...(b.status==='fulfilled'?b.value:[])
-  ]);
+async function allBrowse(off,pg,gid,genre){
+  const[a,b]=await Promise.allSettled([mdBrowse(off,gid),ckBrowse(pg,genre)]);
+  return dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
 }
 
-/* ════════════════════════════════════════════
+/* ════════════════════════════════════
    RENDER
-════════════════════════════════════════════ */
+════════════════════════════════════ */
+function lazyImg(src,cls=''){
+  if(!src)return'';
+  return`<img class="${cls}" src="${esc(src)}" onload="this.classList.add('vis')" onerror="this.style.display='none'" loading="lazy">`;
+}
 function mCard(item){
-  const hasCover = !!item.cover;
-  return `<div class="mc" onclick="showDetail('${esc(item.id)}')">
+  return`<div class="mc" onclick="showDetail('${esc(item.id)}')">
     <div class="mci">
-      <span class="mci-icon">📖</span>
-      ${hasCover ? `<img alt="${esc(item.title)}" data-src="${esc(item.cover)}" onload="this.classList.add('loaded')" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='https://corsproxy.io/?'+encodeURIComponent(this.dataset.src);}">` : ''}
+      <span class="ph">📖</span>
+      ${item.cover?lazyImg(item.cover):''}
       <div class="mov">
         <div class="mtt">${esc(item.title)}</div>
         <div>${tbadge(item.lang)}</div>
@@ -597,9 +566,8 @@ function uRow(u){
   const t=u.chTitle?` — ${u.chTitle}`:'';
   const mid=encodeURIComponent(u.rawMangaId||u.mangaId||'');
   const cid=encodeURIComponent(u.rawChId||'');
-  const hasCover=!!u.cover;
-  return `<div class="ur" onclick="openUpdate('${esc(u.src)}','${mid}','${cid}')">
-    <div class="uth">${hasCover?`<img alt="" data-src="${esc(u.cover)}" onload="this.classList.add('loaded')" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='https://corsproxy.io/?'+encodeURIComponent(this.dataset.src);}">`:''}</div>
+  return`<div class="ur" onclick="openUpdate('${esc(u.src)}','${mid}','${cid}')">
+    <div class="uth">${u.cover?lazyImg(u.cover):'📖'}</div>
     <div class="ui">
       <div class="utt">${esc(u.title)}</div>
       <div class="uc">${esc(n+t)}</div>
@@ -608,90 +576,72 @@ function uRow(u){
   </div>`;
 }
 
-// Lazy-load images using data-src after render
-function activateImages(container){
-  container.querySelectorAll('img[data-src]').forEach(img=>{
-    if(!img.src || img.src==='about:blank' || img.src===window.location.href){
-      img.src = img.dataset.src;
-    }
-  });
-}
-
-/* ════════════════════════════════════════════
+/* ════════════════════════════════════
    HOME
-════════════════════════════════════════════ */
+════════════════════════════════════ */
 async function loadHome(){
-  loadFeatured(); loadHomeUpdates();
+  loadFeatured();loadHomeUpdates();
   clearInterval(refreshTimer);
   refreshTimer=setInterval(()=>{
     if(vis('hp'))loadHomeUpdates();
     if(vis('up'))loadUpdates();
-  }, 5*60*1000);
+  },5*60*1000);
 }
 async function loadFeatured(){
   const g=document.getElementById('hg');
   g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  if(!PROXY_BASE){g.innerHTML='<div class="emp">⚠️ Set up your proxy first — click the yellow banner above.</div>';return;}
   const items=await allFeatured(hMode).catch(()=>[]);
-  if(!items.length){g.innerHTML='<div class="emp">Could not connect — check your internet.</div>';return;}
-  g.innerHTML=items.map(mCard).join('');
-  activateImages(g);
+  g.innerHTML=items.length?items.map(mCard).join(''):'<div class="emp">Could not load. Check your proxy URL.</div>';
 }
 async function loadHomeUpdates(){
   const el=document.getElementById('hu');
   el.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  if(!PROXY_BASE){el.innerHTML='';return;}
   const upd=await allUpdates().catch(()=>[]);
   el.innerHTML=upd.length?upd.slice(0,20).map(uRow).join(''):'<div class="emp">No updates found.</div>';
-  activateImages(el);
 }
-function htab(mode,el){
-  hMode=mode;
-  document.querySelectorAll('.tbar .tab').forEach(t=>t.classList.remove('on'));
-  el.classList.add('on'); loadFeatured();
-}
+function htab(mode,el){hMode=mode;document.querySelectorAll('.tbar .tab').forEach(t=>t.classList.remove('on'));el.classList.add('on');loadFeatured();}
 
-/* ════════════════════════════════════════════
-   UPDATES PAGE
-════════════════════════════════════════════ */
+/* ════════════════════════════════════
+   UPDATES / BROWSE
+════════════════════════════════════ */
 async function loadUpdates(){
   const el=document.getElementById('ul');
   el.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  if(!PROXY_BASE){el.innerHTML='<div class="emp">Set up your proxy first.</div>';return;}
   const upd=await allUpdates().catch(()=>[]);
   el.innerHTML=upd.length?upd.map(uRow).join(''):'<div class="emp">No updates found.</div>';
-  activateImages(el);
 }
-
-/* ════════════════════════════════════════════
-   BROWSE
-════════════════════════════════════════════ */
 async function loadBrowse(reset=true){
   if(reset){bOff=0;bPage=1;}
   const g=document.getElementById('bg');
-  if(reset) g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  if(reset)g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
+  if(!PROXY_BASE){g.innerHTML='<div class="emp">Set up your proxy first.</div>';return;}
   const items=await allBrowse(bOff,bPage,bGenreId,bGenre).catch(()=>[]);
-  bOff+=18; bPage++;
-  if(reset) g.innerHTML='';
-  if(!items.length&&reset){g.innerHTML='<div class="emp">No results found.</div>';return;}
+  bOff+=18;bPage++;
+  if(reset)g.innerHTML='';
+  if(!items.length&&reset){g.innerHTML='<div class="emp">No results.</div>';return;}
   g.innerHTML+=items.map(mCard).join('');
-  activateImages(g);
   document.getElementById('bmore').style.display=items.length>=10?'block':'none';
 }
 function browseMore(){loadBrowse(false);}
 async function gfilt(name,el){
   document.querySelectorAll('.gc').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on'); bGenre=name; bGenreId='';
+  el.classList.add('on');bGenre=name;bGenreId='';
   if(name){
     if(!Object.keys(tagMap).length){
-      const td=await mdFetch('/manga/tag').catch(()=>null);
-      if(td?.data) td.data.forEach(t=>{const n=t.attributes?.name?.en;if(n)tagMap[n]=t.id;});
+      const td=await apiFetch(`${MDEX}/manga/tag`).catch(()=>null);
+      if(td?.data)td.data.forEach(t=>{const n=t.attributes?.name?.en;if(n)tagMap[n]=t.id;});
     }
     bGenreId=tagMap[name]||'';
   }
   loadBrowse();
 }
 
-/* ════════════════════════════════════════════
+/* ════════════════════════════════════
    SEARCH
-════════════════════════════════════════════ */
+════════════════════════════════════ */
 document.getElementById('si').addEventListener('input',e=>{
   clearTimeout(searchTimer);
   const q=e.target.value.trim();
@@ -701,70 +651,61 @@ document.getElementById('si').addEventListener('input',e=>{
   drop.style.display='block';
   searchTimer=setTimeout(()=>doSearch(q),380);
 });
-document.addEventListener('click',e=>{
-  if(!e.target.closest('.sw'))document.getElementById('sd').style.display='none';
-});
+document.addEventListener('click',e=>{if(!e.target.closest('.sw'))document.getElementById('sd').style.display='none';});
 async function doSearch(q){
   const drop=document.getElementById('sd');
+  if(!PROXY_BASE){drop.innerHTML='<div class="emp" style="padding:14px">Set up proxy first</div>';return;}
   const results=await allSearch(q).catch(()=>[]);
   if(!results.length){drop.innerHTML='<div class="emp" style="padding:14px">No results found</div>';return;}
   drop.innerHTML=results.map(m=>`<div class="di" onclick="searchPick('${esc(m.id)}')">
-    ${m.cover?`<img class="dth" data-src="${esc(m.cover)}" alt="${esc(m.title)}" onload="this.classList.add('loaded')" onerror="this.style.opacity='0'">`:'<div class="dth" style="font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--tx3)">📖</div>'}
+    ${m.cover?`<img class="dth" src="${esc(m.cover)}" onload="this.classList.add('vis')" onerror="this.style.opacity='0'" loading="lazy">`:'<div class="dth" style="display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--tx3)">📖</div>'}
     <div class="din"><p>${esc(m.title)}</p><small>${m.status||''}</small></div>
   </div>`).join('');
-  activateImages(drop);
 }
-function searchPick(id){
-  document.getElementById('sd').style.display='none';
-  document.getElementById('si').value='';
-  showDetail(id);
-}
+function searchPick(id){document.getElementById('sd').style.display='none';document.getElementById('si').value='';showDetail(id);}
 
-/* ════════════════════════════════════════════
+/* ════════════════════════════════════
    DETAIL
-════════════════════════════════════════════ */
+════════════════════════════════════ */
 async function showDetail(id){
-  hideAll(); document.getElementById('dp').style.display='block';
+  hideAll();document.getElementById('dp').style.display='block';
   prevPage=getCur()||'home';
   document.getElementById('dtt').textContent='Loading…';
   ['dm','dd','dbs'].forEach(i=>document.getElementById(i).innerHTML='');
   document.getElementById('chl').innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   document.getElementById('cht').textContent='Chapters';
-
-  const parts=id.split(':'); const src=parts[0];
+  const parts=id.split(':'),src=parts[0];
   let detail=null;
-  if(src==='md') detail=await mdDetail(parts[1]);
-  else if(src==='ck') detail=await ckDetail(parts[1]);
-  else if(src==='mr') detail=await mrDetail(parts.slice(1).join(':'));
+  if(src==='md')detail=await mdDetail(parts[1]);
+  else if(src==='ck')detail=await ckDetail(parts[1]);
   if(!detail){document.getElementById('dtt').textContent='Failed to load.';return;}
   curManga=detail;
   document.title=detail.title+' — Inkflow';
   document.getElementById('dtt').textContent=detail.title;
-  // cover with placeholder
-  const covWrap=document.getElementById('dcv-wrap');
   const covImg=document.getElementById('dcv');
-  if(detail.cover){
-    covImg.dataset.src=detail.cover;
-    covImg.src=detail.cover;
-    covImg.onload=()=>covImg.classList.add('loaded');
-    covImg.onerror=()=>{if(!covImg.dataset.r){covImg.dataset.r=1;covImg.src='https://corsproxy.io/?'+encodeURIComponent(detail.cover);}};
-  }
-  document.getElementById('dd').textContent=detail.desc||'No description available.';
+  if(detail.cover){covImg.src=detail.cover;covImg.onload=()=>covImg.classList.add('vis');}
+  document.getElementById('dd').textContent=detail.desc||'No description.';
   document.getElementById('dm').innerHTML=
     tbadge(detail.lang)+
     (detail.status?`<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${detail.status}</span>`:'')+
     (detail.year?`<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${detail.year}</span>`:'');
-
   let chs=[];
-  if(src==='md') chs=await mdChapters(parts[1]);
-  else if(src==='ck') chs=await ckChapters(parts[1]);
-  else if(src==='mr') chs=await mrChapters(parts.slice(1).join(':'));
+  if(src==='md')chs=await mdChapters(parts[1]);
+  else if(src==='ck')chs=await ckChapters(parts[1]);
   curChapters=chs.sort((a,b)=>parseFloat(b.num||0)-parseFloat(a.num||0));
   renderChs();
   document.getElementById('cht').textContent=`${curChapters.length} Chapters`;
   const first=curChapters[curChapters.length-1];
-  document.getElementById('dbs').innerHTML=first
-    ?`<button class="db p" onclick="openCh(${curChapters.length-1})">▶ Start Reading</button>`:'';
+  const lastRead=getLastRead(detail.id);
+  const lastReadIdx=lastRead?curChapters.findIndex(c=>c.rawId===lastRead.chId):-1;
+  let btns='';
+  if(lastReadIdx>=0){
+    btns+=`<button class="db p" onclick="openCh(${lastReadIdx})">▶ Continue Ch. ${esc(curChapters[lastReadIdx].num||'?')}</button>`;
+    if(lastReadIdx>0)btns+=`<button class="db" onclick="openCh(${lastReadIdx-1})">Next unread →</button>`;
+  }else if(first){
+    btns+=`<button class="db p" onclick="openCh(${curChapters.length-1})">▶ Start Reading</button>`;
+  }
+  document.getElementById('dbs').innerHTML=btns;
 }
 function renderChs(){
   const el=document.getElementById('chl');
@@ -773,32 +714,43 @@ function renderChs(){
   el.innerHTML=list.map((c,i)=>{
     const idx=sortAsc?curChapters.length-1-i:i;
     const num=c.num?`Ch. ${c.num}`:'Oneshot';
-    return `<div class="cr" onclick="openCh(${idx})">
+    const read=curManga&&isRead(curManga.id,c.rawId);
+    return`<div class="cr${read?' read':''}" onclick="openCh(${idx})">
       <span class="cn">${esc(num)}</span>
       <span class="ctit">${esc(c.title)||'&nbsp;'}</span>
+      <span class="read-dot"></span>
       <span class="cd">${rt(c.date)}</span>
     </div>`;
   }).join('');
 }
-function togSort(){
-  sortAsc=!sortAsc;
-  document.getElementById('sb').textContent=sortAsc?'↓ Oldest first':'↑ Newest first';
-  renderChs();
-}
+function togSort(){sortAsc=!sortAsc;document.getElementById('sb').textContent=sortAsc?'↓ Oldest first':'↑ Newest first';renderChs();}
 
-/* ════════════════════════════════════════════
-   READER — pages with guaranteed fallback
-════════════════════════════════════════════ */
+/* ════════════════════════════════════
+   READER
+════════════════════════════════════ */
 async function openCh(idx){
-  curChIdx=idx; const ch=curChapters[idx]; if(!ch)return;
+  curChIdx=idx;const ch=curChapters[idx];if(!ch)return;
   showReader();
   document.getElementById('rttl').textContent=curManga?.title||'';
   document.getElementById('rci').textContent=ch.num?`Ch. ${ch.num}`:'Oneshot';
-  navBtns(); await loadPages(ch);
+  navBtns();
+  // record in history
+  if(curManga) recordRead(curManga.id, curManga.title, curManga.cover, ch.num, ch.rawId);
+  // refresh chapter list read states if detail page open
+  renderChs();
+  await loadPages(ch);
 }
 function navBtns(){
-  document.getElementById('pb').disabled=curChIdx>=curChapters.length-1;
-  document.getElementById('nb').disabled=curChIdx<=0;
+  const atFirst=curChIdx>=curChapters.length-1;
+  const atLast=curChIdx<=0;
+  document.getElementById('pb').disabled=atFirst;
+  document.getElementById('nb').disabled=atLast;
+  document.getElementById('pb2').disabled=atFirst;
+  document.getElementById('nb2').disabled=atLast;
+  // sync bottom bar labels
+  const ch=curChapters[curChIdx];
+  document.getElementById('rbb-title').textContent=curManga?.title||'';
+  document.getElementById('rbb-ch').textContent=ch?.num?`Chapter ${ch.num}`:'';
 }
 async function loadPages(ch){
   document.getElementById('sr').innerHTML='';
@@ -806,40 +758,26 @@ async function loadPages(ch){
   document.getElementById('sr').style.display='flex';
   document.getElementById('rl').style.display='flex';
   let pg=[];
-  if(ch.src==='md') pg=await mdPages(ch.rawId).catch(()=>[]);
-  else if(ch.src==='ck') pg=await ckPages(ch.rawId).catch(()=>[]);
-  else if(ch.src==='mr') pg=await mrPages(ch.rawId).catch(()=>[]);
-
-  // MD fallback: proxy every URL through corsproxy if direct fails
-  if(!pg.length && ch.src==='md'){
-    const d=await mdFetch(`/at-home/server/${ch.rawId}`).catch(()=>null);
-    if(d?.chapter){
-      const{baseUrl,chapter:{hash,dataSaver,data}}=d;
-      const files=dataSaver||data, folder=dataSaver?'data-saver':'data';
-      pg=files.map(p=>`https://corsproxy.io/?${encodeURIComponent(`${baseUrl}/${folder}/${hash}/${p}`)}`);
-    }
-  }
-
+  if(ch.src==='md')pg=await mdPages(ch.rawId).catch(()=>[]);
+  else if(ch.src==='ck')pg=await ckPages(ch.rawId).catch(()=>[]);
   document.getElementById('rl').style.display='none';
   if(!pg.length){
-    const mdLink=ch.src==='md'?`https://mangadex.org/chapter/${ch.rawId}`:'';
-    const ckLink=ch.src==='ck'?`https://comick.io/chapter/${ch.rawId}`:'';
-    const link=mdLink||ckLink;
+    const link=ch.src==='md'?`https://mangadex.org/chapter/${ch.rawId}`:ch.src==='ck'?`https://comick.io/chapter/${ch.rawId}`:'';
     document.getElementById('sr').innerHTML=`<div style="text-align:center;padding:60px 20px;max-width:480px;margin:0 auto">
-      <div style="font-size:40px;margin-bottom:14px;opacity:.25">📖</div>
+      <div style="font-size:40px;margin-bottom:14px;opacity:.2">📖</div>
       <p style="font-size:15px;font-weight:500;margin-bottom:8px">Chapter unavailable</p>
-      <p style="color:var(--tx2);font-size:13px;line-height:1.7;margin-bottom:20px">This chapter is restricted or requires a login on the original site. Try reading it there directly.</p>
+      <p style="color:var(--tx2);font-size:13px;line-height:1.7;margin-bottom:20px">This chapter is restricted or login-only on the original site.</p>
       ${link?`<a href="${link}" target="_blank" rel="noopener" style="display:inline-block;padding:9px 20px;background:var(--acc);color:#fff;border-radius:8px;text-decoration:none;font-size:13px;font-weight:500">Read on ${ch.src==='md'?'MangaDex':'Comick'} →</a>`:''}
     </div>`;
     return;
   }
-  pages=pg; curPg=0; renderReader();
+  pages=pg;curPg=0;renderReader();
 }
 function renderReader(){
   if(rMode==='scroll'){
     document.getElementById('sr').style.display='flex';
     document.getElementById('pr').style.display='none';
-    document.getElementById('sr').innerHTML=pages.map((p,i)=>`<img class="spage" src="${esc(p)}" alt="Page ${i+1}" loading="lazy" style="opacity:0;transition:opacity .3s" onload="this.style.opacity=1" onerror="if(!this.dataset.r){this.dataset.r=1;this.src='https://corsproxy.io/?'+encodeURIComponent('${esc(p)}')}">`).join('');
+    document.getElementById('sr').innerHTML=pages.map((p,i)=>`<img class="spage" src="${esc(p)}" alt="Page ${i+1}" loading="lazy" onload="this.classList.add('vis')">`).join('');
   }else{
     document.getElementById('sr').style.display='none';
     document.getElementById('pr').style.display='flex';
@@ -849,11 +787,9 @@ function renderReader(){
 function showPg(n){
   curPg=Math.max(0,Math.min(n,pages.length-1));
   const img=document.getElementById('pi');
-  const src=pages[curPg];
-  img.style.opacity=0;
-  img.onload=()=>img.style.opacity=1;
-  img.onerror=()=>{if(!img.dataset.r){img.dataset.r=1;img.src=`https://corsproxy.io/?${encodeURIComponent(src)}`;}};
-  img.src=src;
+  img.classList.remove('vis');
+  img.onload=()=>img.classList.add('vis');
+  img.src=pages[curPg];
   document.getElementById('pc').textContent=`${curPg+1} / ${pages.length}`;
 }
 function prevPg(){showPg(curPg-1);}
@@ -864,28 +800,20 @@ function setMode(m){
   document.getElementById('mpg').classList.toggle('on',m==='page');
   renderReader();
 }
-function navCh(dir){
-  const ni=curChIdx-dir;
-  if(ni>=0&&ni<curChapters.length)openCh(ni);
-}
-async function openUpdate(src, rawMangaId, rawChId){
-  rawMangaId=decodeURIComponent(rawMangaId);
-  rawChId=decodeURIComponent(rawChId);
-  showReader();
-  document.getElementById('rttl').textContent='Loading…';
-  document.getElementById('rl').style.display='flex';
+function navCh(dir){const ni=curChIdx-dir;if(ni>=0&&ni<curChapters.length)openCh(ni);}
+async function openUpdate(src,rawMangaId,rawChId){
+  rawMangaId=decodeURIComponent(rawMangaId);rawChId=decodeURIComponent(rawChId);
+  showReader();document.getElementById('rttl').textContent='Loading…';document.getElementById('rl').style.display='flex';
   const fullId=`${src}:${rawMangaId}`;
   if(!curManga||curManga.id!==fullId){
     let det=null;
-    if(src==='md') det=await mdDetail(rawMangaId);
-    else if(src==='ck') det=await ckDetail(rawMangaId);
-    else if(src==='mr') det=await mrDetail(rawMangaId);
+    if(src==='md')det=await mdDetail(rawMangaId);
+    else if(src==='ck')det=await ckDetail(rawMangaId);
     if(det){
       curManga=det;
       let chs=[];
-      if(src==='md') chs=await mdChapters(rawMangaId);
-      else if(src==='ck') chs=await ckChapters(rawMangaId);
-      else if(src==='mr') chs=await mrChapters(rawMangaId);
+      if(src==='md')chs=await mdChapters(rawMangaId);
+      else if(src==='ck')chs=await ckChapters(rawMangaId);
       curChapters=chs.sort((a,b)=>parseFloat(b.num||0)-parseFloat(a.num||0));
     }
   }
@@ -894,55 +822,88 @@ async function openUpdate(src, rawMangaId, rawChId){
   const ch=curChapters[curChIdx]||{src,rawId:rawChId,num:''};
   document.getElementById('rttl').textContent=curManga?.title||'';
   document.getElementById('rci').textContent=ch.num?`Ch. ${ch.num}`:'';
-  navBtns();
-  await loadPages(ch);
+  navBtns();await loadPages(ch);
 }
 
-/* ════════════════════════════════════════════
-   NAV
-════════════════════════════════════════════ */
+/* ════════════════════════════════════
+   READ HISTORY — saved to localStorage
+════════════════════════════════════ */
+function getHistory(){
+  try{return JSON.parse(localStorage.getItem('inkflow_history')||'[]');}catch{return[];}
+}
+function saveHistory(arr){
+  localStorage.setItem('inkflow_history', JSON.stringify(arr.slice(0,200)));
+}
+function recordRead(mangaId, mangaTitle, mangaCover, chNum, chId){
+  const hist = getHistory().filter(h=>!(h.mangaId===mangaId && h.chId===chId));
+  hist.unshift({mangaId, mangaTitle, mangaCover, chNum, chId, time:Date.now()});
+  saveHistory(hist);
+}
+function isRead(mangaId, chId){
+  return getHistory().some(h=>h.mangaId===mangaId && h.chId===chId);
+}
+function getLastRead(mangaId){
+  return getHistory().find(h=>h.mangaId===mangaId);
+}
+function clearHistory(){
+  if(!confirm('Clear all reading history?'))return;
+  localStorage.removeItem('inkflow_history');
+  renderHistoryPage();
+}
+function renderHistoryPage(){
+  const el=document.getElementById('hist-list');
+  const hist=getHistory();
+  if(!hist.length){el.innerHTML='<div class="hist-empty">📖 No reading history yet.<br>Start reading to track your progress.</div>';return;}
+  el.innerHTML=hist.map(h=>{
+    const n=h.chNum?`Ch. ${h.chNum}`:'Oneshot';
+    const t=rt(h.time);
+    const cover=h.mangaCover||'';
+    return`<div class="hrow" onclick="resumeFromHistory('${esc(h.mangaId)}','${esc(h.chId)}')">
+      <div class="hcov">${cover?`<img src="${esc(cover)}" onload="this.classList.add('vis')" onerror="this.style.display='none'" loading="lazy">`:'📖'}</div>
+      <div class="hi">
+        <div class="htt">${esc(h.mangaTitle||'Unknown')}</div>
+        <div class="hch">Last read: ${esc(n)}</div>
+      </div>
+      <div class="htime">${t}</div>
+    </div>`;
+  }).join('');
+}
+async function resumeFromHistory(mangaId, chId){
+  const src=mangaId.split(':')[0];
+  await openUpdate(src, mangaId.split(':').slice(1).join(':'), chId);
+}
 function vis(id){return document.getElementById(id).style.display!=='none';}
-function getCur(){if(vis('hp'))return'home';if(vis('bp'))return'browse';if(vis('up'))return'updates';return'home';}
-function hideAll(){['hp','bp','up','dp','rp'].forEach(id=>document.getElementById(id).style.display='none');}
+function getCur(){if(vis('hp'))return'home';if(vis('bp'))return'browse';if(vis('up'))return'updates';if(vis('hsp'))return'history';return'home';}
+function hideAll(){['hp','bp','up','dp','rp','hsp'].forEach(id=>document.getElementById(id).style.display='none');}
 function goHome(){hideAll();document.getElementById('hp').style.display='block';}
-function showBrowse(){
-  hideAll();document.getElementById('bp').style.display='block';
-  if(!document.getElementById('bg').querySelector('.mc'))loadBrowse();
-}
+function showBrowse(){hideAll();document.getElementById('bp').style.display='block';if(!document.getElementById('bg').querySelector('.mc'))loadBrowse();}
 function showUpdatesPage(){hideAll();document.getElementById('up').style.display='block';loadUpdates();}
+function showHistoryPage(){hideAll();document.getElementById('hsp').style.display='block';renderHistoryPage();}
 function showReader(){hideAll();document.getElementById('rp').style.display='block';}
-function goBack(){
-  hideAll();
-  if(prevPage==='browse')document.getElementById('bp').style.display='block';
-  else if(prevPage==='updates')document.getElementById('up').style.display='block';
-  else document.getElementById('hp').style.display='block';
-}
+function goBack(){hideAll();if(prevPage==='browse')document.getElementById('bp').style.display='block';else if(prevPage==='updates')document.getElementById('up').style.display='block';else if(prevPage==='history')document.getElementById('hsp').style.display='block';else document.getElementById('hp').style.display='block';}
 function closeReader(){hideAll();document.getElementById('dp').style.display='block';}
-function toUpdates(){
-  document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
-  document.querySelectorAll('.nt')[2].classList.add('on');
-  showUpdatesPage();
-}
+function toUpdates(){document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));document.querySelectorAll('.nt')[2].classList.add('on');showUpdatesPage();}
 function switchTab(tab,el){
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');
   if(tab==='home')goHome();
   else if(tab==='browse')showBrowse();
-  else showUpdatesPage();
+  else if(tab==='updates')showUpdatesPage();
+  else if(tab==='history')showHistoryPage();
 }
-
-/* ════════════════════════════════════════════
-   KEYBOARD
-════════════════════════════════════════════ */
 document.addEventListener('keydown',e=>{
+  if(document.activeElement.tagName==='INPUT')return;
   if(vis('rp')){
     if(e.key==='ArrowRight'&&rMode==='page')nextPg();
     if(e.key==='ArrowLeft'&&rMode==='page')prevPg();
+    if(e.key==='n'||e.key==='N'){if(curChIdx>0)navCh(1);}
+    if(e.key==='p'||e.key==='P'){if(curChIdx<curChapters.length-1)navCh(-1);}
     if(e.key==='Escape')closeReader();
   }
 });
 
-/* ── INIT ── */
+/* INIT */
+checkProxy();
 goHome();
 loadHome();
 </script>

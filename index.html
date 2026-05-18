@@ -425,8 +425,8 @@ async function mdFeatured(mode){
 async function mdUpdates(){
   const d=await apiFetch(`${MDEX}/chapter?limit=96&translatedLanguage[]=en&order[publishAt]=desc&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&includeExternalUrl=0`).catch(()=>null);
   if(!d?.data)return[];
-  // filter out zero-page chapters
-  const valid=d.data.filter(c=>!c.attributes.externalUrl && c.attributes.pages>0);
+  // filter out chapters that are external links only (e.g. Viz, Shonen Jump+)
+  const valid=d.data.filter(c=>!c.attributes.externalUrl);
   const seen=new Set(),rows=[];
   for(const c of valid){
     const mr=(c.relationships||[]).find(r=>r.type==='manga');if(!mr)continue;
@@ -463,8 +463,8 @@ async function mdChapters(id){
   while(true){
     const d=await apiFetch(`${MDEX}/manga/${id}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=asc&contentRating[]=safe&contentRating[]=suggestive&includeExternalUrl=0`).catch(()=>null);
     if(!d?.data?.length)break;
-    // filter out chapters with no pages (externalUrl only) and empty page count
-    const valid=d.data.filter(c=>!c.attributes.externalUrl && (c.attributes.pages===undefined || c.attributes.pages > 0));
+    // filter out chapters with external links only (Viz, Shonen Jump+, etc)
+    const valid=d.data.filter(c=>!c.attributes.externalUrl);
     all=all.concat(valid);
     if(d.data.length<96)break;off+=96;if(off>1920)break;
   }
@@ -483,7 +483,8 @@ async function mdPages(id){
   if(!d?.chapter)return[];
   const{baseUrl,chapter:{hash,dataSaver,data}}=d;
   const pg=dataSaver||data,folder=dataSaver?'data-saver':'data';
-  // proxy every image URL through our Vercel proxy
+  // log the CDN host so we can debug allowlist issues
+  try{const u=new URL(baseUrl);console.log('[Inkflow] CDN host:',u.hostname);}catch{}
   return pg.map(p=>imgSrc(`${baseUrl}/${folder}/${hash}/${p}`));
 }
 

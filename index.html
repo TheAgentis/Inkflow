@@ -411,16 +411,14 @@ function mdCard(m){return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover
 
 async function mdFeatured(mode){
   const ord=mode==='popular'?'followedCount':mode==='top'?'rating':'createdAt';
-  // fetch 2 pages worth and filter to those with available english chapters
   const [p1,p2]=await Promise.allSettled([
-    apiFetch(`${MDEX}/manga?limit=36&offset=0&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
-    apiFetch(`${MDEX}/manga?limit=36&offset=36&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`)
+    apiFetch(`${MDEX}/manga?limit=24&offset=0&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
+    apiFetch(`${MDEX}/manga?limit=24&offset=24&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`)
   ]);
-  const items=[
+  return dedup([
     ...(p1.status==='fulfilled'?(p1.value?.data||[]):[]),
     ...(p2.status==='fulfilled'?(p2.value?.data||[]):[])
-  ];
-  return items.map(mdCard);
+  ].map(mdCard));
 }
 async function mdUpdates(){
   const d=await apiFetch(`${MDEX}/chapter?limit=96&translatedLanguage[]=en&order[publishAt]=desc&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&includeExternalUrl=0`).catch(()=>null);
@@ -499,9 +497,9 @@ function ckCov(i){
 function ckCard(i){return{id:'ck:'+i.hid,rawId:i.hid,src:'ck',title:i.title||i.slug||'',cover:ckCov(i),lang:i.country||'ja',status:i.status===1?'ongoing':'completed'};}
 async function ckFeatured(){
   const [p1,p2,p3]=await Promise.allSettled([
-    apiFetch(`${COMICK}/v1.0/search?limit=36&page=1&sort=view&lang=en`),
-    apiFetch(`${COMICK}/v1.0/search?limit=36&page=2&sort=view&lang=en`),
-    apiFetch(`${COMICK}/v1.0/search?limit=36&page=1&sort=uploaded&lang=en`)
+    apiFetch(`${COMICK}/v1.0/search?limit=24&page=1&sort=view&lang=en`),
+    apiFetch(`${COMICK}/v1.0/search?limit=24&page=2&sort=view&lang=en`),
+    apiFetch(`${COMICK}/v1.0/search?limit=24&page=1&sort=uploaded&lang=en`)
   ]);
   return dedup([
     ...((p1.status==='fulfilled'?p1.value:null)||[]).map(ckCard),
@@ -511,8 +509,8 @@ async function ckFeatured(){
 }
 async function ckUpdates(){
   const [p1,p2]=await Promise.allSettled([
-    apiFetch(`${COMICK}/v1.0/chapter?page=1&limit=60&lang=en`),
-    apiFetch(`${COMICK}/v1.0/chapter?page=2&limit=60&lang=en`)
+    apiFetch(`${COMICK}/v1.0/chapter?page=1&limit=30&lang=en`),
+    apiFetch(`${COMICK}/v1.0/chapter?page=2&limit=30&lang=en`)
   ]);
   const all=[
     ...((p1.status==='fulfilled'?p1.value:null)||[]),
@@ -531,8 +529,8 @@ async function ckSearch(q){
 }
 async function ckBrowse(pg,genre){
   const [p1,p2]=await Promise.allSettled([
-    apiFetch(`${COMICK}/v1.0/search?limit=36&page=${pg}&sort=view&lang=en${genre?'&genres='+encodeURIComponent(genre):''}`),
-    apiFetch(`${COMICK}/v1.0/search?limit=36&page=${pg+1}&sort=view&lang=en${genre?'&genres='+encodeURIComponent(genre):''}`)
+    apiFetch(`${COMICK}/v1.0/search?limit=24&page=${pg}&sort=view&lang=en${genre?'&genres='+encodeURIComponent(genre):''}`),
+    apiFetch(`${COMICK}/v1.0/search?limit=24&page=${pg+1}&sort=view&lang=en${genre?'&genres='+encodeURIComponent(genre):''}`)
   ]);
   return dedup([
     ...((p1.status==='fulfilled'?p1.value:null)||[]).map(ckCard),

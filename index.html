@@ -369,7 +369,6 @@ function checkProxy() {
    STATE
 ════════════════════════════════════ */
 const MDEX  = 'https://api.mangadex.org';
-const COMICK = 'https://api.comick.fun';
 
 let curManga=null, curChapters=[], curChIdx=0;
 let pages=[], curPg=0, rMode='scroll';
@@ -487,14 +486,10 @@ async function mdPages(id){
 }
 
 /* ════════════════════════════════════
-   COMICK
+   COMICK — disabled, stubs only
 ════════════════════════════════════ */
-function ckCov(i){
-  const key=i.md_covers?.[0]?.b2key;
-  if(key)return imgSrc(`https://meo.comick.pictures/${key}`);
-  return i.cover_url?imgSrc(i.cover_url):'';
-}
-function ckCard(i){return{id:'ck:'+i.hid,rawId:i.hid,src:'ck',title:i.title||i.slug||'',cover:ckCov(i),lang:i.country||'ja',status:i.status===1?'ongoing':'completed'};}
+function ckCov(i){return'';}
+function ckCard(i){return{id:'ck:'+i.hid,rawId:i.hid,src:'ck',title:i.title||'',cover:'',lang:'ja',status:''};}
 async function ckFeatured(){return[];}
 async function ckUpdates(){return[];}
 async function ckSearch(q){return[];}
@@ -502,46 +497,11 @@ async function ckBrowse(pg,genre){return[];}
 async function ckDetail(id){return null;}
 async function ckChapters(id){return[];}
 async function ckPages(id){return[];}
-async function ckCard(i){return null;}
 
-// Extra MangaDex feeds to replace Comick volume
+// Extra MangaDex feeds
 async function mdFeaturedAlt(order){
   const d=await apiFetch(`${MDEX}/manga?limit=24&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${order}]=desc&hasAvailableChapters=true`).catch(()=>null);
   return(d?.data||[]).map(mdCard);
-}
-async function ckSearch(q){
-  const d=await apiFetch(`${COMICK}/v1.0/search?q=${encodeURIComponent(q)}&limit=6&lang=en`).catch(()=>null);
-  return(d||[]).map(ckCard);
-}
-async function ckBrowse(pg,genre){
-  const [p1,p2]=await Promise.allSettled([
-    apiFetch(`${COMICK}/v1.0/search?limit=24&page=${pg}&sort=view&lang=en${genre?'&genres='+encodeURIComponent(genre):''}`),
-    apiFetch(`${COMICK}/v1.0/search?limit=24&page=${pg+1}&sort=view&lang=en${genre?'&genres='+encodeURIComponent(genre):''}`)
-  ]);
-  return dedup([
-    ...((p1.status==='fulfilled'?p1.value:null)||[]).map(ckCard),
-    ...((p2.status==='fulfilled'?p2.value:null)||[]).map(ckCard)
-  ]);
-}
-async function ckDetail(id){
-  const d=await apiFetch(`${COMICK}/comic/${id}?tachiyomi=true`).catch(()=>null);
-  if(!d?.comic)return null;
-  const c=d.comic;
-  return{id:'ck:'+c.hid,rawId:c.hid,src:'ck',title:c.title||c.slug,cover:ckCov(c),
-    lang:c.country||'ja',status:c.status===1?'ongoing':'completed',desc:c.desc||'',author:d.authors?.[0]?.name||'Unknown'};
-}
-async function ckChapters(id){
-  let all=[],page=1;
-  while(true){
-    const d=await apiFetch(`${COMICK}/comic/${id}/chapters?lang=en&limit=200&page=${page}`).catch(()=>null);
-    if(!d?.chapters?.length)break;
-    all=all.concat(d.chapters);if(d.chapters.length<200)break;page++;if(page>10)break;
-  }
-  return all.map(c=>({id:'ck:'+c.hid,rawId:c.hid,src:'ck',num:c.chap,title:c.title||'',date:c.created_at}));
-}
-async function ckPages(id){
-  const d=await apiFetch(`${COMICK}/chapter/${id}?tachiyomi=true`).catch(()=>null);
-  return(d?.chapter?.images||[]).map(i=>imgSrc(i.url)).filter(Boolean);
 }
 
 /* ════════════════════════════════════

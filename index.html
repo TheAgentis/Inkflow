@@ -458,22 +458,24 @@ async function mdDetail(id){
 async function mdChapters(id){
   let all=[],off=0;
   while(true){
-    const d=await apiFetch(`${MDEX}/manga/${id}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=asc&contentRating[]=safe&contentRating[]=suggestive&includeExternalUrl=0`).catch(()=>null);
+    // note: no includeExternalUrl param — filter client-side instead
+    const d=await apiFetch(`${MDEX}/manga/${id}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=asc&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
     if(!d?.data?.length)break;
-    // filter out chapters with external links only (Viz, Shonen Jump+, etc)
+    // filter out external-only chapters (Viz, Shonen Jump+)
     const valid=d.data.filter(c=>!c.attributes.externalUrl);
     all=all.concat(valid);
     if(d.data.length<96)break;off+=96;if(off>1920)break;
   }
-  // deduplicate by chapter number, prefer highest page count
+  // deduplicate by chapter number
   const seen={};
   for(const c of all){
-    const n=c.attributes.chapter||'0';
-    if(!seen[n]||((c.attributes.pages||0)>(seen[n].attributes.pages||0)))seen[n]=c;
+    const n=c.attributes.chapter||'oneshot';
+    if(!seen[n])seen[n]=c;
   }
+  // sort ascending (ch.1 first, latest last) — index 0 = ch.1
   return Object.values(seen)
-    .sort((a,b)=>parseFloat(b.attributes.chapter||0)-parseFloat(a.attributes.chapter||0))
-    .map(c=>({id:c.id,rawId:c.id,src:'md',num:c.attributes.chapter,title:c.attributes.title||'',date:c.attributes.publishAt,pages:c.attributes.pages||0}));
+    .sort((a,b)=>parseFloat(a.attributes.chapter||0)-parseFloat(b.attributes.chapter||0))
+    .map(c=>({id:c.id,rawId:c.id,src:'md',num:c.attributes.chapter,title:c.attributes.title||'',date:c.attributes.publishAt}));
 }
 async function mdPages(id){
   const d=await apiFetch(`${MDEX}/at-home/server/${id}`).catch(()=>null);
@@ -721,27 +723,30 @@ async function showDetail(id){
       if(mdChs.length) chs=mdChs;
     }
   }
-  curChapters=chs.sort((a,b)=>parseFloat(b.num||0)-parseFloat(a.num||0));
+  // chapters now sorted ascending: index 0 = ch.1, last index = latest
+  curChapters=chs;
   renderChs();
   document.getElementById('cht').textContent=`${curChapters.length} Chapters`;
-  const first=curChapters[curChapters.length-1];
   const lastRead=getLastRead(detail.id);
   const lastReadIdx=lastRead?curChapters.findIndex(c=>c.rawId===lastRead.chId):-1;
   let btns='';
   if(lastReadIdx>=0){
     btns+=`<button class="db p" onclick="openCh(${lastReadIdx})">▶ Continue Ch. ${esc(curChapters[lastReadIdx].num||'?')}</button>`;
-    if(lastReadIdx>0)btns+=`<button class="db" onclick="openCh(${lastReadIdx-1})">Next unread →</button>`;
-  }else if(first){
-    btns+=`<button class="db p" onclick="openCh(${curChapters.length-1})">▶ Start Reading</button>`;
+    const nextIdx=lastReadIdx+1;
+    if(nextIdx<curChapters.length)btns+=`<button class="db" onclick="openCh(${nextIdx})">Next unread →</button>`;
+  }else if(curChapters.length){
+    btns+=`<button class="db p" onclick="openCh(0)">▶ Start Reading</button>`;
   }
   document.getElementById('dbs').innerHTML=btns;
 }
 function renderChs(){
   const el=document.getElementById('chl');
   if(!curChapters.length){el.innerHTML='<div class="emp">No chapters found.</div>';return;}
-  const list=sortAsc?[...curChapters].reverse():curChapters;
+  // display newest first by default, oldest first when sortAsc
+  const list=sortAsc?curChapters:[...curChapters].reverse();
   el.innerHTML=list.map((c,i)=>{
-    const idx=sortAsc?curChapters.length-1-i:i;
+    // map display index back to curChapters index
+    const idx=sortAsc?i:curChapters.length-1-i;
     const num=c.num?`Ch. ${c.num}`:'Oneshot';
     const read=curManga&&isRead(curManga.id,c.rawId);
     return`<div class="cr${read?' read':''}" onclick="openCh(${idx})">
@@ -770,13 +775,12 @@ async function openCh(idx){
   await loadPages(ch);
 }
 function navBtns(){
-  const atFirst=curChIdx>=curChapters.length-1;
-  const atLast=curChIdx<=0;
+  const atFirst=curChIdx<=0;
+  const atLast=curChIdx>=curChapters.length-1;
   document.getElementById('pb').disabled=atFirst;
   document.getElementById('nb').disabled=atLast;
   document.getElementById('pb2').disabled=atFirst;
   document.getElementById('nb2').disabled=atLast;
-  // sync bottom bar labels
   const ch=curChapters[curChIdx];
   document.getElementById('rbb-title').textContent=curManga?.title||'';
   document.getElementById('rbb-ch').textContent=ch?.num?`Chapter ${ch.num}`:'';
@@ -841,7 +845,7 @@ function setMode(m){
   document.getElementById('mpg').classList.toggle('on',m==='page');
   renderReader();
 }
-function navCh(dir){const ni=curChIdx-dir;if(ni>=0&&ni<curChapters.length)openCh(ni);}
+function navCh(dir){const ni=curChIdx+dir;if(ni>=0&&ni<curChapters.length)openCh(ni);}
 async function openUpdate(src,rawMangaId,rawChId){
   rawMangaId=decodeURIComponent(rawMangaId);rawChId=decodeURIComponent(rawChId);
   showReader();document.getElementById('rttl').textContent='Loading…';document.getElementById('rl').style.display='flex';
@@ -937,8 +941,8 @@ document.addEventListener('keydown',e=>{
   if(vis('rp')){
     if(e.key==='ArrowRight'&&rMode==='page')nextPg();
     if(e.key==='ArrowLeft'&&rMode==='page')prevPg();
-    if(e.key==='n'||e.key==='N'){if(curChIdx>0)navCh(1);}
-    if(e.key==='p'||e.key==='P'){if(curChIdx<curChapters.length-1)navCh(-1);}
+    if(e.key==='n'||e.key==='N'){if(curChIdx<curChapters.length-1)navCh(1);}
+    if(e.key==='p'||e.key==='P'){if(curChIdx>0)navCh(-1);}
     if(e.key==='Escape')closeReader();
   }
 });

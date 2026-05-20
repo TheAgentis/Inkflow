@@ -495,33 +495,19 @@ function ckCov(i){
   return i.cover_url?imgSrc(i.cover_url):'';
 }
 function ckCard(i){return{id:'ck:'+i.hid,rawId:i.hid,src:'ck',title:i.title||i.slug||'',cover:ckCov(i),lang:i.country||'ja',status:i.status===1?'ongoing':'completed'};}
-async function ckFeatured(){
-  const [p1,p2,p3]=await Promise.allSettled([
-    apiFetch(`${COMICK}/v1.0/search?limit=24&page=1&sort=view&lang=en`),
-    apiFetch(`${COMICK}/v1.0/search?limit=24&page=2&sort=view&lang=en`),
-    apiFetch(`${COMICK}/v1.0/search?limit=24&page=1&sort=uploaded&lang=en`)
-  ]);
-  return dedup([
-    ...((p1.status==='fulfilled'?p1.value:null)||[]).map(ckCard),
-    ...((p2.status==='fulfilled'?p2.value:null)||[]).map(ckCard),
-    ...((p3.status==='fulfilled'?p3.value:null)||[]).map(ckCard)
-  ]);
-}
-async function ckUpdates(){
-  const [p1,p2]=await Promise.allSettled([
-    apiFetch(`${COMICK}/v1.0/chapter?page=1&limit=30&lang=en`),
-    apiFetch(`${COMICK}/v1.0/chapter?page=2&limit=30&lang=en`)
-  ]);
-  const all=[
-    ...((p1.status==='fulfilled'?p1.value:null)||[]),
-    ...((p2.status==='fulfilled'?p2.value:null)||[])
-  ];
-  return all.filter(c=>c.md_comics?.title).map(c=>({
-    mangaId:'ck:'+c.md_comics.hid,rawMangaId:c.md_comics.hid,
-    rawChId:c.hid,chNum:c.chap,chTitle:c.title||'',time:c.created_at,src:'ck',
-    title:c.md_comics.title,
-    cover:c.md_comics.md_covers?.[0]?.b2key?imgSrc(`https://meo.comick.pictures/${c.md_comics.md_covers[0].b2key}`):'',
-  }));
+async function ckFeatured(){return[];}
+async function ckUpdates(){return[];}
+async function ckSearch(q){return[];}
+async function ckBrowse(pg,genre){return[];}
+async function ckDetail(id){return null;}
+async function ckChapters(id){return[];}
+async function ckPages(id){return[];}
+async function ckCard(i){return null;}
+
+// Extra MangaDex feeds to replace Comick volume
+async function mdFeaturedAlt(order){
+  const d=await apiFetch(`${MDEX}/manga?limit=24&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${order}]=desc&hasAvailableChapters=true`).catch(()=>null);
+  return(d?.data||[]).map(mdCard);
 }
 async function ckSearch(q){
   const d=await apiFetch(`${COMICK}/v1.0/search?q=${encodeURIComponent(q)}&limit=6&lang=en`).catch(()=>null);
@@ -559,24 +545,50 @@ async function ckPages(id){
 }
 
 /* ════════════════════════════════════
-   UNIFIED
+   UNIFIED — MangaDex only (Comick removed due to timeouts)
 ════════════════════════════════════ */
 async function allFeatured(mode){
-  const[a,b]=await Promise.allSettled([mdFeatured(mode),ckFeatured()]);
-  return dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
+  const ord=mode==='popular'?'followedCount':mode==='top'?'rating':'createdAt';
+  const[p1,p2,p3]=await Promise.allSettled([
+    apiFetch(`${MDEX}/manga?limit=24&offset=0&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
+    apiFetch(`${MDEX}/manga?limit=24&offset=24&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
+    apiFetch(`${MDEX}/manga?limit=24&offset=48&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`)
+  ]);
+  return dedup([
+    ...(p1.status==='fulfilled'?(p1.value?.data||[]):[]),
+    ...(p2.status==='fulfilled'?(p2.value?.data||[]):[]),
+    ...(p3.status==='fulfilled'?(p3.value?.data||[]):[])
+  ].map(mdCard));
 }
 async function allUpdates(){
-  const[a,b]=await Promise.allSettled([mdUpdates(),ckUpdates()]);
+  const[a,b]=await Promise.allSettled([
+    mdUpdates(),
+    apiFetch(`${MDEX}/chapter?limit=50&offset=50&translatedLanguage[]=en&order[publishAt]=desc&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive&includeExternalUrl=0`).then(async d=>{
+      if(!d?.data)return[];
+      const valid=d.data.filter(c=>!c.attributes.externalUrl);
+      const seen=new Set(),rows=[];
+      for(const c of valid){
+        const mr=(c.relationships||[]).find(r=>r.type==='manga');if(!mr)continue;
+        const k=mr.id+':'+c.attributes.chapter;if(seen.has(k))continue;seen.add(k);
+        rows.push({mangaId:mr.id,rawChId:c.id,chNum:c.attributes.chapter,chTitle:c.attributes.title||'',time:c.attributes.publishAt,src:'md',_mr:mr});
+      }
+      const ids=[...new Set(rows.map(r=>r.mangaId))];
+      if(!ids.length)return[];
+      const md=await apiFetch(`${MDEX}/manga?ids[]=${ids.slice(0,25).join('&ids[]=')}&includes[]=cover_art&limit=25`).catch(()=>null);
+      const mm={};(md?.data||[]).forEach(m=>mm[m.id]=m);
+      return rows.map(r=>{const m=mm[r.mangaId]||r._mr;return{...r,title:mdTit(m),cover:mdCov(m,'128')};});
+    }).catch(()=>[])
+  ]);
   return[...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]
-    .sort((x,y)=>new Date(y.time||0)-new Date(x.time||0)).slice(0,60);
+    .sort((x,y)=>new Date(y.time||0)-new Date(x.time||0)).slice(0,80);
 }
-async function allSearch(q){
-  const[a,b]=await Promise.allSettled([mdSearch(q),ckSearch(q)]);
-  return dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
-}
+async function allSearch(q){return mdSearch(q);}
 async function allBrowse(off,pg,gid,genre){
-  const[a,b]=await Promise.allSettled([mdBrowse(off,gid),ckBrowse(pg,genre)]);
-  return dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
+  const[p1,p2]=await Promise.allSettled([mdBrowse(off,gid),mdBrowse(off+24,gid)]);
+  return dedup([
+    ...(p1.status==='fulfilled'?p1.value:[]),
+    ...(p2.status==='fulfilled'?p2.value:[])
+  ]);
 }
 /* ════════════════════════════════════
    RENDER

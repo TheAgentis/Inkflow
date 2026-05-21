@@ -397,6 +397,21 @@ function checkProxy(){if(!PROXY_BASE)document.getElementById('pwarn').style.disp
    STATE
 ═══════════════════════════════════════ */
 const MDEX='https://api.mangadex.org';
+
+// MangaKakalot via our own Vercel scraper (api/manga.js)
+function mkURL(params){
+  const base=PROXY_BASE.replace(/\/$/,'')+'/api/manga?';
+  return base+Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
+}
+async function mkFetch(params){
+  if(!PROXY_BASE)throw new Error('NO_PROXY');
+  const r=await fetch(mkURL(params),{signal:AbortSignal.timeout(15000)});
+  if(!r.ok)throw new Error('HTTP '+r.status);
+  return r.json();
+}
+function mkCard(m){
+  return{id:'mk:'+m.id,rawId:m.id,src:'mk',title:m.title||'',cover:m.image?imgSrc(m.image):'',lang:'ja',status:''};
+}
 let curManga=null,curChapters=[],curChIdx=0;
 let pages=[],curPg=0,rMode='scroll';
 let prevPage='home',hMode='popular';
@@ -482,7 +497,50 @@ async function mdBrowse(off,gid){
   const d=await apiFetch(url).catch(()=>null);
   return(d?.data||[]).map(mdCard);
 }
-async function mdDetail(id){
+
+/* ═══════════════════════════════════════
+   MANGAKAKALOT (via api/manga.js scraper)
+═══════════════════════════════════════ */
+async function mkFeatured(type='topview'){
+  const d=await mkFetch({action:'list',type,page:'1'}).catch(()=>null);
+  return(d?.items||[]).filter(m=>m.image).map(mkCard);
+}
+async function mkFeaturedPage2(type='topview'){
+  const d=await mkFetch({action:'list',type,page:'2'}).catch(()=>null);
+  return(d?.items||[]).filter(m=>m.image).map(mkCard);
+}
+async function mkUpdates(){
+  const d=await mkFetch({action:'list',type:'latest',page:'1'}).catch(()=>null);
+  return(d?.items||[]).filter(m=>m.image&&m.chapter).map(m=>{
+    const numMatch=m.chapter.match(/(\d+(?:\.\d+)?)/);
+    return{mangaId:'mk:'+m.id,rawMangaId:m.id,rawChId:m.id+'::'+m.chapter,
+      chNum:numMatch?numMatch[1]:'',chTitle:'',time:'',src:'mk',
+      title:m.title,cover:m.image?imgSrc(m.image):''};
+  });
+}
+async function mkSearch(q){
+  const d=await mkFetch({action:'search',q}).catch(()=>null);
+  return(d?.items||[]).filter(m=>m.image).map(mkCard);
+}
+async function mkBrowse(page,category){
+  const d=await mkFetch({action:'list',type:'topview',category:category||'all',page:String(page)}).catch(()=>null);
+  return(d?.items||[]).filter(m=>m.image).map(mkCard);
+}
+async function mkDetail(id){
+  const d=await mkFetch({action:'detail',id}).catch(()=>null);
+  if(!d?.title)return null;
+  return{id:'mk:'+id,rawId:id,src:'mk',title:d.title,cover:d.image?imgSrc(d.image):'',
+    lang:'ja',status:d.status||'',desc:d.desc||'',author:d.author||'Unknown'};
+}
+async function mkChapters(id){
+  const d=await mkFetch({action:'detail',id}).catch(()=>null);
+  if(!d?.chapters)return[];
+  return d.chapters.map(c=>({id:'mk:'+c.id,rawId:c.id,src:'mk',num:c.num,title:c.name||'',date:c.date}));
+}
+async function mkPages(chid){
+  const d=await mkFetch({action:'pages',chid}).catch(()=>null);
+  return(d?.pages||[]).map(p=>imgSrc(p));
+}
   const d=await apiFetch(`${MDEX}/manga/${id}?includes[]=cover_art&includes[]=author`).catch(()=>null);
   if(!d?.data)return null;
   const m=d.data;
@@ -590,18 +648,33 @@ async function loadFeatured(){
   const g=document.getElementById('hg');
   g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){g.innerHTML='<div class="emp">⚠️ Set up your proxy — click the yellow banner above.</div>';return;}
-  const items=await mdFeatured(hMode).catch(()=>[]);
+  const ord=hMode==='popular'?'followedCount':hMode==='top'?'rating':'createdAt';
+  const mkType=hMode==='new'?'newest':'topview';
+  const[p1,p2,p3,p4,p5]=await Promise.allSettled([
+    apiFetch(`${MDEX}/manga?limit=24&offset=0&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
+    apiFetch(`${MDEX}/manga?limit=24&offset=24&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
+    apiFetch(`${MDEX}/manga?limit=24&offset=48&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
+    mkFeatured(mkType),
+    mkFeaturedPage2(mkType)
+  ]);
+  const items=dedup([
+    ...(p1.status==='fulfilled'?(p1.value?.data||[]):[]).map(mdCard),
+    ...(p2.status==='fulfilled'?(p2.value?.data||[]):[]).map(mdCard),
+    ...(p3.status==='fulfilled'?(p3.value?.data||[]):[]).map(mdCard),
+    ...(p4.status==='fulfilled'?p4.value:[]),
+    ...(p5.status==='fulfilled'?p5.value:[])
+  ]);
   g.innerHTML=items.length?items.map(mCard).join(''):'<div class="emp">Could not load. Check your proxy.</div>';
-  // hero uses first 8
-  heroItems=items.slice(0,8);
+  heroItems=items.filter(i=>i.cover).slice(0,8);
   if(heroItems.length){setHero(0);startHeroTimer();}
 }
 async function loadHomeUpdates(){
   const el=document.getElementById('hu');
   el.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){el.innerHTML='';return;}
-  const upd=await mdUpdates().catch(()=>[]);
-  el.innerHTML=upd.length?upd.slice(0,24).map(uRow).join(''):'<div class="emp">No updates found.</div>';
+  const[a,b]=await Promise.allSettled([mdUpdates(),mkUpdates()]);
+  const upd=dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
+  el.innerHTML=upd.length?upd.slice(0,30).map(uRow).join(''):'<div class="emp">No updates found.</div>';
 }
 function htab(mode,el){
   hMode=mode;
@@ -616,21 +689,27 @@ async function loadUpdates(){
   const el=document.getElementById('ul');
   el.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){el.innerHTML='<div class="emp">Set up your proxy first.</div>';return;}
-  const upd=await mdUpdates().catch(()=>[]);
+  const[a,b]=await Promise.allSettled([mdUpdates(),mkUpdates()]);
+  const upd=dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
   el.innerHTML=upd.length?upd.map(uRow).join(''):'<div class="emp">No updates found.</div>';
 }
 
 /* ═══════════════════════════════════════
    BROWSE
 ═══════════════════════════════════════ */
+let bPage=1,bCat='all';
 async function loadBrowse(reset=true){
-  if(reset)bOff=0;
+  if(reset){bOff=0;bPage=1;}
   const g=document.getElementById('bg');
   if(reset)g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){g.innerHTML='<div class="emp">Set up your proxy first.</div>';return;}
-  const[p1,p2]=await Promise.allSettled([mdBrowse(bOff,bGenreId),mdBrowse(bOff+24,bGenreId)]);
-  const items=dedup([...(p1.status==='fulfilled'?p1.value:[]),...(p2.status==='fulfilled'?p2.value:[])]);
-  bOff+=48;
+  const[p1,p2,p3]=await Promise.allSettled([mdBrowse(bOff,bGenreId),mdBrowse(bOff+24,bGenreId),mkBrowse(bPage,bCat)]);
+  const items=dedup([
+    ...(p1.status==='fulfilled'?p1.value:[]),
+    ...(p2.status==='fulfilled'?p2.value:[]),
+    ...(p3.status==='fulfilled'?p3.value:[])
+  ]);
+  bOff+=48;bPage++;
   if(reset)g.innerHTML='';
   if(!items.length&&reset){g.innerHTML='<div class="emp">No results found.</div>';return;}
   g.innerHTML+=items.map(mCard).join('');
@@ -666,7 +745,8 @@ document.addEventListener('click',e=>{if(!e.target.closest('.sw'))document.getEl
 async function doSearch(q){
   const drop=document.getElementById('sd');
   if(!PROXY_BASE){drop.innerHTML='<div class="emp" style="padding:14px">Set up proxy first</div>';return;}
-  const results=await mdSearch(q).catch(()=>[]);
+  const[a,b]=await Promise.allSettled([mdSearch(q),mkSearch(q)]);
+  const results=dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
   if(!results.length){drop.innerHTML='<div class="emp" style="padding:14px">No results found</div>';return;}
   drop.innerHTML=results.map(m=>`<div class="di" onclick="searchPick('${esc(m.id)}')">
     ${m.cover?`<img class="dth" src="${esc(m.cover)}" onload="this.classList.add('vis')" onerror="this.style.opacity='0'" loading="lazy">`:'<div class="dth" style="display:flex;align-items:center;justify-content:center">📖</div>'}
@@ -715,6 +795,7 @@ async function showDetail(id){
   const parts=id.split(':'),src=parts[0];
   let detail=null;
   if(src==='md')detail=await mdDetail(parts[1]);
+  else if(src==='mk')detail=await mkDetail(parts.slice(1).join(':'));
   if(!detail){document.getElementById('dtt').textContent='Failed to load.';return;}
   curManga=detail;
   document.title=detail.title+' — Inkflow';
@@ -726,7 +807,7 @@ async function showDetail(id){
     tbadge(detail.lang)+
     (detail.status?`<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${detail.status}</span>`:'')+
     (detail.year?`<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${detail.year}</span>`:'');
-  const chs=await mdChapters(parts[1]);
+  const chs=src==='mk'?await mkChapters(parts.slice(1).join(':')):await mdChapters(parts[1]);
   curChapters=chs; // ascending: index 0 = ch1, last = latest
   renderChs();
   document.getElementById('cht').textContent=`${curChapters.length} Chapters`;
@@ -790,7 +871,9 @@ async function loadPages(ch){
   document.getElementById('pr').style.display='none';
   document.getElementById('sr').style.display='flex';
   document.getElementById('rl').style.display='flex';
-  let pg=await mdPages(ch.rawId).catch(()=>[]);
+  let pg=[];
+  if(ch.src==='md')pg=await mdPages(ch.rawId).catch(()=>[]);
+  else if(ch.src==='mk')pg=await mkPages(ch.rawId).catch(()=>[]);
   document.getElementById('rl').style.display='none';
   if(!pg.length){
     document.getElementById('sr').innerHTML=`<div style="text-align:center;padding:60px 20px;max-width:480px;margin:0 auto">
@@ -837,10 +920,10 @@ async function openUpdate(src,rawMangaId,rawChId){
   showReader();document.getElementById('rttl').textContent='Loading…';document.getElementById('rl').style.display='flex';
   const fullId=`${src}:${rawMangaId}`;
   if(!curManga||curManga.id!==fullId){
-    const det=await mdDetail(rawMangaId);
+    const det=src==='mk'?await mkDetail(rawMangaId):await mdDetail(rawMangaId);
     if(det){
       curManga=det;
-      const chs=await mdChapters(rawMangaId);
+      const chs=src==='mk'?await mkChapters(rawMangaId):await mdChapters(rawMangaId);
       curChapters=chs;
     }
   }

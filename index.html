@@ -541,6 +541,7 @@ async function mkPages(chid){
   const d=await mkFetch({action:'pages',chid}).catch(()=>null);
   return(d?.pages||[]).map(p=>imgSrc(p));
 }
+async function mdDetail(id){
   const d=await apiFetch(`${MDEX}/manga/${id}?includes[]=cover_art&includes[]=author`).catch(()=>null);
   if(!d?.data)return null;
   const m=d.data;

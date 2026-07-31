@@ -255,6 +255,13 @@ main{padding:0 24px 32px}
 
   <main>
     <div class="srcbar" id="srcbar"></div>
+    <div id="libshelf"></div>
+    <div class="gbar" id="typebar">
+      <span class="gp on" onclick="setType('',this)">All</span>
+      <span class="gp" onclick="setType('ja',this)">Manga</span>
+      <span class="gp" onclick="setType('ko',this)">Manhwa</span>
+      <span class="gp" onclick="setType('zh',this)">Manhua</span>
+    </div>
     <div class="tbar">
       <button class="tab on" onclick="htab('popular',this)">🔥 Popular</button>
       <button class="tab" onclick="htab('new',this)">🕐 New</button>
@@ -416,6 +423,7 @@ let bOff=0,bGenreId='';
 let sortAsc=false,tagMap={};
 let refreshTimer=null,searchTimer=null;
 let heroItems=[],heroIdx=0,heroTimer=null;
+let typeFilter='',libTimer=null;
 
 /* ═══════════════════════════════════════
    TITLE HYGIENE
@@ -511,7 +519,11 @@ function toggleSrc(id){
 }
 function renderSrcBar(){
   const el=document.getElementById('srcbar');if(!el)return;
-  el.innerHTML='<span>Sources:</span>'+[...PROVIDERS.values()].map(p=>{
+  /* Results are always merged across every live source. With only one
+     implemented there is nothing to combine, so hide the bar rather
+     than imply you must pick between feeds. */
+  if([...PROVIDERS.values()].filter(p=>p.available).length<2){el.innerHTML='';return;}
+  el.innerHTML='<span>Showing all sources combined:</span>'+[...PROVIDERS.values()].map(p=>{
     if(!p.available)return`<span class="srcchip na" title="Adapter not implemented"><span class="srcdot"></span>${esc(p.label)}</span>`;
     return`<span class="srcchip ${p.enabled?'on':'off'}" onclick="toggleSrc('${esc(p.id)}')"><span class="srcdot"></span>${esc(p.label)}</span>`;
   }).join('');
@@ -557,15 +569,26 @@ function mdCard(m){
     lang:m.attributes?.originalLanguage,status:m.attributes?.status||''};
 }
 const MD_BASE='&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&hasAvailableChapters=true';
+/* MangaDex indexes Korean and Chinese originals under originalLanguage.
+   Ordering by followedCount buries them beneath Japanese titles, so an
+   explicit filter is the only way to surface the manhwa/manhua catalog. */
+function mdLang(lang){
+  if(!lang)return'';
+  if(lang==='zh')return'&originalLanguage[]=zh&originalLanguage[]=zh-hk';
+  return'&originalLanguage[]='+lang;
+}
 
 registerProvider({
   id:'md',label:'MangaDex',
   capabilities:{list:true,search:true,browse:true,updates:true},
 
-  async list({mode}){
+  /* was 3x24=72; MangaDex allows limit=96 and offsets into the
+     thousands, so this pulls 288 per shelf for the same 3 requests */
+  async list({mode,lang}){
     const ord=mode==='popular'?'followedCount':mode==='top'?'rating':'createdAt';
-    const pages=await Promise.allSettled([0,24,48].map(off=>
-      apiFetch(`${MDEX}/manga?limit=24&offset=${off}${MD_BASE}&order[${ord}]=desc`)));
+    const lp=mdLang(lang);
+    const pages=await Promise.allSettled([0,96,192].map(off=>
+      apiFetch(`${MDEX}/manga?limit=96&offset=${off}${MD_BASE}${lp}&order[${ord}]=desc`)));
     return pages.flatMap(p=>p.status==='fulfilled'?(p.value?.data||[]):[]).map(mdCard);
   },
 
@@ -574,13 +597,14 @@ registerProvider({
     return(d?.data||[]).map(mdCard);
   },
 
-  async browse({offset,tagId}){
+  async browse({offset,tagId,lang}){
+    const lp=mdLang(lang);
     const mk=off=>{
-      let u=`${MDEX}/manga?limit=24&offset=${off}${MD_BASE}&order[followedCount]=desc`;
+      let u=`${MDEX}/manga?limit=96&offset=${off}${MD_BASE}${lp}&order[followedCount]=desc`;
       if(tagId)u+=`&includedTags[]=${tagId}`;
       return apiFetch(u);
     };
-    const rs=await Promise.allSettled([mk(offset),mk(offset+24)]);
+    const rs=await Promise.allSettled([mk(offset),mk(offset+96),mk(offset+192)]);
     return rs.flatMap(r=>r.status==='fulfilled'?(r.value?.data||[]):[]).map(mdCard);
   },
 
@@ -717,19 +741,21 @@ function uRow(u){
 ═══════════════════════════════════════ */
 async function loadHome(){
   renderSrcBar();
-  loadFeatured();loadHomeUpdates();
+  loadFeatured();loadHomeUpdates();checkLibraryUpdates();
   clearInterval(refreshTimer);
   refreshTimer=setInterval(()=>{
     if(vis('hp'))loadHomeUpdates();
     if(vis('up'))loadUpdates();
   },5*60*1000);
+  clearInterval(libTimer);
+  libTimer=setInterval(checkLibraryUpdates,10*60*1000);
 }
 async function loadFeatured(){
   const g=document.getElementById('hg');
   g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){g.innerHTML='<div class="emp">⚠️ Set up your proxy — click the yellow banner above.</div>';return;}
   if(!activeProviders('list').length){g.innerHTML='<div class="emp">No sources enabled.</div>';return;}
-  const items=dedup(await gather('list',p=>p.list({mode:hMode})));
+  const items=dedup(await gather('list',p=>p.list({mode:hMode,lang:typeFilter})));
   g.innerHTML=items.length?items.map(mCard).join(''):'<div class="emp">Could not load. Check your proxy.</div>';
   heroItems=items.filter(i=>i.cover).slice(0,8);
   if(heroItems.length){setHero(0);startHeroTimer();}
@@ -745,6 +771,74 @@ function htab(mode,el){
   hMode=mode;
   document.querySelectorAll('.tbar .tab').forEach(t=>t.classList.remove('on'));
   el.classList.add('on');loadFeatured();
+}
+function setType(lang,el){
+  typeFilter=lang;
+  document.querySelectorAll('#typebar .gp').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  loadFeatured();
+  if(document.getElementById('bg').querySelector('.mc'))loadBrowse();
+}
+
+/* ═══════════════════════════════════════
+   LIBRARY AUTO-UPDATE
+   Polls every title you've read and flags ones with chapters past
+   your last read. This is the "auto updating" that actually matters —
+   it tracks your library rather than a global firehose.
+═══════════════════════════════════════ */
+function libState(){try{return JSON.parse(localStorage.getItem('inkflow_lib')||'{}');}catch{return{};}}
+function saveLibState(s){localStorage.setItem('inkflow_lib',JSON.stringify(s));}
+
+function libraryTitles(){
+  const seen=new Map();
+  for(const h of getHistory()){
+    if(!seen.has(h.mangaId))seen.set(h.mangaId,h);
+  }
+  return[...seen.values()].slice(0,24);
+}
+
+async function checkLibraryUpdates(){
+  if(!PROXY_BASE)return;
+  const titles=libraryTitles();
+  if(!titles.length){renderLibShelf([]);return;}
+  const state=libState();
+  const rs=await Promise.allSettled(titles.map(async t=>{
+    const prov=providerFor(t.mangaId);
+    if(!prov?.capabilities?.list&&!prov)return null;
+    const chs=await withTimeout(prov.chapters(rawOf(t.mangaId)),15000,prov.id).catch(()=>[]);
+    if(!chs.length)return null;
+    const latest=chs[chs.length-1];
+    const readIdx=chs.findIndex(c=>c.rawId===t.chId);
+    const unread=readIdx>=0?chs.length-1-readIdx:0;
+    state[t.mangaId]={latestNum:latest.num,checked:Date.now()};
+    return{...t,latest,unread,total:chs.length};
+  }));
+  saveLibState(state);
+  const rows=rs.filter(r=>r.status==='fulfilled'&&r.value).map(r=>r.value);
+  rows.sort((a,b)=>b.unread-a.unread);
+  renderLibShelf(rows);
+}
+
+function renderLibShelf(rows){
+  const el=document.getElementById('libshelf');
+  if(!el)return;
+  if(!rows.length){el.innerHTML='';return;}
+  const withNew=rows.filter(r=>r.unread>0);
+  el.innerHTML=`<div class="sech">
+      <h2 class="sect">Continue Reading${withNew.length?` <span class="badge bm" style="vertical-align:middle">${withNew.length} with new</span>`:''}</h2>
+      <button class="sa" onclick="checkLibraryUpdates()">↺ Check now</button>
+    </div>
+    <div class="ul" style="margin-bottom:26px">${rows.map(r=>`
+      <div class="ur" onclick="openUpdate('${esc(String(r.mangaId).split(':')[0])}','${encodeURIComponent(rawOf(r.mangaId))}','${encodeURIComponent(r.unread>0?r.latest.rawId:r.chId)}')">
+        <div class="uth">${r.mangaCover?`<img src="${esc(r.mangaCover)}" onload="this.classList.add('vis')" onerror="this.style.display='none'" loading="lazy">`:'📖'}</div>
+        <div class="ui">
+          <div class="utt">${esc(r.mangaTitle||'Untitled')}</div>
+          <div class="uc">${r.unread>0
+            ?`${r.unread} new · latest Ch. ${esc(r.latest.num||'?')}`
+            :`Caught up · Ch. ${esc(r.chNum||'?')}`}</div>
+        </div>
+        <div class="ut">${r.unread>0?'<span class="badge bm">NEW</span>':rt(r.time)}</div>
+      </div>`).join('')}</div>`;
 }
 
 /* ═══════════════════════════════════════
@@ -795,8 +889,8 @@ async function loadBrowse(reset=true){
   const g=document.getElementById('bg');
   if(reset)g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){g.innerHTML='<div class="emp">Set up your proxy first.</div>';return;}
-  const items=dedup(await gather('browse',p=>p.browse({offset:bOff,tagId:bGenreId})));
-  bOff+=48;
+  const items=dedup(await gather('browse',p=>p.browse({offset:bOff,tagId:bGenreId,lang:typeFilter})));
+  bOff+=288;
   if(reset)g.innerHTML='';
   if(!items.length&&reset){g.innerHTML='<div class="emp">No results found.</div>';return;}
   g.innerHTML+=items.map(mCard).join('');

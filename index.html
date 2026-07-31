@@ -75,6 +75,16 @@ main{padding:0 24px 32px}
 .gp:hover{border-color:var(--bdr2);color:var(--tx)}
 .gp.on{background:var(--acc);border-color:var(--acc);color:#fff}
 
+/* ── SOURCE TOGGLES ──────────────────────────── */
+.srcbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px;font-size:12px;color:var(--tx3)}
+.srcchip{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;border:1px solid var(--bdr);background:var(--sur);color:var(--tx2);cursor:pointer;transition:all .15s;font-size:12px}
+.srcchip:hover{border-color:var(--bdr2)}
+.srcchip.on{background:var(--accbg);border-color:rgba(0,255,136,.35);color:var(--acc2)}
+.srcchip.off{opacity:.45}
+.srcchip.na{opacity:.35;cursor:not-allowed}
+.srcdot{width:6px;height:6px;border-radius:50%;background:var(--tx3)}
+.srcchip.on .srcdot{background:var(--acc)}
+
 /* ── MANGA GRID ──────────────────────────────── */
 .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:32px}
 @media(max-width:1100px){.grid{grid-template-columns:repeat(5,1fr)}}
@@ -95,6 +105,7 @@ main{padding:0 24px 32px}
 .bm{background:rgba(0,255,136,.18);color:#00ffaa;border:1px solid rgba(0,255,136,.35)}
 .bmh{background:rgba(62,207,142,.15);color:#3ecf8e;border:1px solid rgba(62,207,142,.3)}
 .bmc{background:rgba(240,164,41,.15);color:#f0a429;border:1px solid rgba(240,164,41,.3)}
+.bsrc{background:var(--sur2);color:var(--tx3);border:1px solid var(--bdr)}
 
 /* ── UPDATES LIST ─────────────────────────────── */
 .ul{display:flex;flex-direction:column;gap:6px}
@@ -243,6 +254,7 @@ main{padding:0 24px 32px}
   </div>
 
   <main>
+    <div class="srcbar" id="srcbar"></div>
     <div class="tbar">
       <button class="tab on" onclick="htab('popular',this)">🔥 Popular</button>
       <button class="tab" onclick="htab('new',this)">🕐 New</button>
@@ -397,21 +409,6 @@ function checkProxy(){if(!PROXY_BASE)document.getElementById('pwarn').style.disp
    STATE
 ═══════════════════════════════════════ */
 const MDEX='https://api.mangadex.org';
-
-// MangaKakalot via our own Vercel scraper (api/manga.js)
-function mkURL(params){
-  const base=PROXY_BASE.replace(/\/$/,'')+'/api/manga?';
-  return base+Object.entries(params).map(([k,v])=>k+'='+encodeURIComponent(v)).join('&');
-}
-async function mkFetch(params){
-  if(!PROXY_BASE)throw new Error('NO_PROXY');
-  const r=await fetch(mkURL(params),{signal:AbortSignal.timeout(15000)});
-  if(!r.ok)throw new Error('HTTP '+r.status);
-  return r.json();
-}
-function mkCard(m){
-  return{id:'mk:'+m.id,rawId:m.id,src:'mk',title:m.title||'',cover:m.image?imgSrc(m.image):'',lang:'ja',status:''};
-}
 let curManga=null,curChapters=[],curChIdx=0;
 let pages=[],curPg=0,rMode='scroll';
 let prevPage='home',hMode='popular';
@@ -421,12 +418,113 @@ let refreshTimer=null,searchTimer=null;
 let heroItems=[],heroIdx=0,heroTimer=null;
 
 /* ═══════════════════════════════════════
+   TITLE HYGIENE
+   norm() previously stripped all non-ASCII, so every CJK-titled
+   entry normalised to '' and got dropped as a duplicate of the
+   first one. Unicode-aware now.
+═══════════════════════════════════════ */
+const BAD_TITLES=new Set(['','unknown','n/a','na','null','undefined','untitled','—','-','–','???','...']);
+function hasTitle(x){
+  const t=String(x?.title??'').trim();
+  if(!t||BAD_TITLES.has(t.toLowerCase()))return false;
+  return /[\p{L}\p{N}]/u.test(t);
+}
+function norm(s){
+  return String(s||'').toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}]/gu,'').slice(0,40);
+}
+function dedup(arr){
+  const seen=new Set();
+  return (arr||[]).filter(i=>{
+    if(!hasTitle(i))return false;
+    const k=norm(i.title);
+    if(!k||seen.has(k))return false;
+    seen.add(k);return true;
+  });
+}
+
+/* ═══════════════════════════════════════
+   PROVIDER REGISTRY
+   ───────────────────────────────────────
+   Every provider implements the same surface. Nothing outside
+   this section knows which source a title came from.
+
+     id            short prefix used in composite ids '<id>:<raw>'
+     label         display name
+     enabled       user-toggleable at runtime
+     available     false => stub, shown greyed out, never called
+     capabilities  { list, search, browse, updates }
+
+     list({mode})              -> [Title]
+     search(q)                 -> [Title]
+     browse({offset,tagId})    -> [Title]
+     updates()                 -> [Update]
+     detail(rawId)             -> Detail | null
+     chapters(rawId)           -> [Chapter]   (ascending, ch1 first)
+     pages(rawChapterId)       -> [imageUrl]
+
+   Normalised shapes:
+     Title   { id:'<prov>:<raw>', rawId, src, title, cover, lang, status }
+     Chapter { id:'<prov>:<raw>', rawId, src, num, title, date }
+     Update  { src, mangaId, rawMangaId, rawChId, title, cover, chNum, chTitle, time }
+     Detail  { ...Title, desc, author, year }
+═══════════════════════════════════════ */
+const PROVIDERS=new Map();
+function registerProvider(p){
+  PROVIDERS.set(p.id,Object.assign({enabled:true,available:true,capabilities:{}},p));
+}
+function providerFor(id){return PROVIDERS.get(String(id).split(':')[0]);}
+function rawOf(id){return String(id).split(':').slice(1).join(':');}
+function activeProviders(cap){
+  return [...PROVIDERS.values()].filter(p=>p.available&&p.enabled&&p.capabilities[cap]);
+}
+function withTimeout(promise,ms,label){
+  return Promise.race([
+    promise,
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error((label||'provider')+' timeout')),ms))
+  ]);
+}
+/* Fan out across every capable provider. One slow or dead source
+   degrades to a missing shelf, never a broken page. */
+async function gather(cap,fn,ms=15000){
+  const ps=activeProviders(cap);
+  if(!ps.length)return[];
+  const rs=await Promise.allSettled(ps.map(p=>withTimeout(Promise.resolve(fn(p)),ms,p.id)));
+  rs.forEach((r,i)=>{
+    if(r.status==='rejected')console.warn('[Inkflow]',ps[i].id,cap,'failed:',r.reason?.message||r.reason);
+  });
+  return rs.flatMap(r=>r.status==='fulfilled'?(r.value||[]):[]);
+}
+
+/* ── source toggle UI ─────────────────── */
+function loadSrcPrefs(){
+  try{const s=JSON.parse(localStorage.getItem('inkflow_sources')||'{}');
+    PROVIDERS.forEach(p=>{if(p.available&&typeof s[p.id]==='boolean')p.enabled=s[p.id];});}catch{}
+}
+function saveSrcPrefs(){
+  const s={};PROVIDERS.forEach(p=>{if(p.available)s[p.id]=p.enabled;});
+  localStorage.setItem('inkflow_sources',JSON.stringify(s));
+}
+function toggleSrc(id){
+  const p=PROVIDERS.get(id);if(!p||!p.available)return;
+  p.enabled=!p.enabled;saveSrcPrefs();renderSrcBar();
+  loadFeatured();loadHomeUpdates();
+}
+function renderSrcBar(){
+  const el=document.getElementById('srcbar');if(!el)return;
+  el.innerHTML='<span>Sources:</span>'+[...PROVIDERS.values()].map(p=>{
+    if(!p.available)return`<span class="srcchip na" title="Adapter not implemented"><span class="srcdot"></span>${esc(p.label)}</span>`;
+    return`<span class="srcchip ${p.enabled?'on':'off'}" onclick="toggleSrc('${esc(p.id)}')"><span class="srcdot"></span>${esc(p.label)}</span>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════
    HELPERS
 ═══════════════════════════════════════ */
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function rt(iso){
   if(!iso)return'';
   const d=Date.now()-new Date(iso).getTime(),m=Math.floor(d/60000);
+  if(isNaN(m))return'';
   if(m<1)return'just now';if(m<60)return m+'m ago';
   const h=Math.floor(m/60);if(h<24)return h+'h ago';
   const dy=Math.floor(h/24);if(dy<30)return dy+'d ago';
@@ -437,172 +535,154 @@ function tbadge(lang){
   const[l,c]=mp[lang]||['manga','bm'];
   return`<span class="badge ${c}">${l}</span>`;
 }
-function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'').slice(0,30)}
-function dedup(arr){const seen=new Set();return arr.filter(i=>{const k=norm(i.title);if(seen.has(k))return false;seen.add(k);return true;});}
+function srcBadge(id){
+  const p=providerFor(id);
+  return p?`<span class="badge bsrc">${esc(p.label)}</span>`:'';
+}
 
 /* ═══════════════════════════════════════
-   MANGADEX API
+   PROVIDER: MangaDex
+   Public documented REST API. Fully implemented.
 ═══════════════════════════════════════ */
 function mdCov(m,sz='256'){
   const r=(m.relationships||[]).find(r=>r.type==='cover_art');
   if(!r?.attributes?.fileName)return'';
   return imgSrc(`https://uploads.mangadex.org/covers/${m.id}/${r.attributes.fileName}.${sz}.jpg`);
 }
-function mdTit(m){const t=m.attributes?.title||{};return t.en||t['ja-ro']||t.ja||t.ko||Object.values(t)[0]||'Unknown';}
-function mdCard(m){return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),lang:m.attributes?.originalLanguage,status:m.attributes?.status||''};}
+/* no ||'Unknown' fallback — a missing title must stay empty so
+   hasTitle() can filter it instead of rendering a fake card */
+function mdTit(m){const t=m.attributes?.title||{};return t.en||t['ja-ro']||t.ja||t.ko||Object.values(t)[0]||'';}
+function mdCard(m){
+  return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),
+    lang:m.attributes?.originalLanguage,status:m.attributes?.status||''};
+}
+const MD_BASE='&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&hasAvailableChapters=true';
 
-async function mdFetch(path,retries=2){
-  for(let i=0;i<=retries;i++){
-    try{return await apiFetch(MDEX+path);}catch(e){if(i===retries)return null;await new Promise(r=>setTimeout(r,600));}
-  }
-  return null;
-}
+registerProvider({
+  id:'md',label:'MangaDex',
+  capabilities:{list:true,search:true,browse:true,updates:true},
 
-async function mdFeatured(mode){
-  const ord=mode==='popular'?'followedCount':mode==='top'?'rating':'createdAt';
-  const[p1,p2,p3]=await Promise.allSettled([
-    apiFetch(`${MDEX}/manga?limit=24&offset=0&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
-    apiFetch(`${MDEX}/manga?limit=24&offset=24&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
-    apiFetch(`${MDEX}/manga?limit=24&offset=48&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`)
-  ]);
-  return dedup([
-    ...(p1.status==='fulfilled'?(p1.value?.data||[]):[]),
-    ...(p2.status==='fulfilled'?(p2.value?.data||[]):[]),
-    ...(p3.status==='fulfilled'?(p3.value?.data||[]):[])
-  ].map(mdCard));
-}
-async function mdUpdates(){
-  const d=await apiFetch(`${MDEX}/chapter?limit=96&translatedLanguage[]=en&order[publishAt]=desc&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
-  if(!d?.data)return[];
-  const valid=d.data.filter(c=>!c.attributes.externalUrl&&c.attributes.pages>0);
-  const seen=new Set(),rows=[];
-  for(const c of valid){
-    const mr=(c.relationships||[]).find(r=>r.type==='manga');if(!mr)continue;
-    const k=mr.id+':'+c.attributes.chapter;if(seen.has(k))continue;seen.add(k);
-    rows.push({mangaId:mr.id,rawChId:c.id,chNum:c.attributes.chapter,chTitle:c.attributes.title||'',time:c.attributes.publishAt,src:'md',_mr:mr});
+  async list({mode}){
+    const ord=mode==='popular'?'followedCount':mode==='top'?'rating':'createdAt';
+    const pages=await Promise.allSettled([0,24,48].map(off=>
+      apiFetch(`${MDEX}/manga?limit=24&offset=${off}${MD_BASE}&order[${ord}]=desc`)));
+    return pages.flatMap(p=>p.status==='fulfilled'?(p.value?.data||[]):[]).map(mdCard);
+  },
+
+  async search(q){
+    const d=await apiFetch(`${MDEX}/manga?title=${encodeURIComponent(q)}&limit=8${MD_BASE}`).catch(()=>null);
+    return(d?.data||[]).map(mdCard);
+  },
+
+  async browse({offset,tagId}){
+    const mk=off=>{
+      let u=`${MDEX}/manga?limit=24&offset=${off}${MD_BASE}&order[followedCount]=desc`;
+      if(tagId)u+=`&includedTags[]=${tagId}`;
+      return apiFetch(u);
+    };
+    const rs=await Promise.allSettled([mk(offset),mk(offset+24)]);
+    return rs.flatMap(r=>r.status==='fulfilled'?(r.value?.data||[]):[]).map(mdCard);
+  },
+
+  async updates(){
+    const d=await apiFetch(`${MDEX}/chapter?limit=96&translatedLanguage[]=en&order[publishAt]=desc&includes[]=manga&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
+    if(!d?.data)return[];
+    const valid=d.data.filter(c=>!c.attributes.externalUrl&&c.attributes.pages>0);
+    const seen=new Set(),rows=[];
+    for(const c of valid){
+      const mr=(c.relationships||[]).find(r=>r.type==='manga');if(!mr)continue;
+      const k=mr.id+':'+c.attributes.chapter;if(seen.has(k))continue;seen.add(k);
+      rows.push({src:'md',mangaId:'md:'+mr.id,rawMangaId:mr.id,rawChId:c.id,
+        chNum:c.attributes.chapter,chTitle:c.attributes.title||'',time:c.attributes.publishAt,_mr:mr});
+    }
+    const ids=[...new Set(rows.map(r=>r.rawMangaId))].slice(0,40);
+    if(!ids.length)return[];
+    const md=await apiFetch(`${MDEX}/manga?ids[]=${ids.join('&ids[]=')}&includes[]=cover_art&limit=40`).catch(()=>null);
+    const mm={};(md?.data||[]).forEach(m=>mm[m.id]=m);
+    return rows.map(r=>{
+      const m=mm[r.rawMangaId]||r._mr;
+      return{...r,title:mdTit(m),cover:mdCov(m,'128')};
+    });
+  },
+
+  async detail(rawId){
+    const d=await apiFetch(`${MDEX}/manga/${rawId}?includes[]=cover_art&includes[]=author`).catch(()=>null);
+    if(!d?.data)return null;
+    const m=d.data;
+    return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),
+      lang:m.attributes?.originalLanguage,status:m.attributes?.status||'',year:m.attributes?.year||'',
+      desc:m.attributes?.description?.en||Object.values(m.attributes?.description||{})[0]||'',
+      author:(m.relationships||[]).find(r=>r.type==='author')?.attributes?.name||'Unknown'};
+  },
+
+  async chapters(rawId){
+    let all=[],off=0;
+    while(true){
+      const d=await apiFetch(`${MDEX}/manga/${rawId}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=asc&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
+      if(!d?.data?.length)break;
+      all=all.concat(d.data.filter(c=>!c.attributes.externalUrl));
+      if(d.data.length<96)break;off+=96;if(off>1920)break;
+    }
+    const seen={};
+    for(const c of all){const n=c.attributes.chapter||'oneshot';if(!seen[n])seen[n]=c;}
+    return Object.values(seen)
+      .sort((a,b)=>parseFloat(a.attributes.chapter||0)-parseFloat(b.attributes.chapter||0))
+      .map(c=>({id:'md:'+c.id,rawId:c.id,src:'md',num:c.attributes.chapter,
+        title:c.attributes.title||'',date:c.attributes.publishAt}));
+  },
+
+  async pages(rawChId){
+    const d=await apiFetch(`${MDEX}/at-home/server/${rawChId}`).catch(()=>null);
+    if(!d?.chapter)return[];
+    const{baseUrl,chapter:{hash,dataSaver,data}}=d;
+    const pg=dataSaver||data,folder=dataSaver?'data-saver':'data';
+    return pg.map(p=>imgSrc(`${baseUrl}/${folder}/${hash}/${p}`));
   }
-  const ids=[...new Set(rows.map(r=>r.mangaId))];
-  if(!ids.length)return[];
-  const md=await apiFetch(`${MDEX}/manga?ids[]=${ids.slice(0,40).join('&ids[]=')}&includes[]=cover_art&limit=40`).catch(()=>null);
-  const mm={};(md?.data||[]).forEach(m=>mm[m.id]=m);
-  return rows.map(r=>{const m=mm[r.mangaId]||r._mr;return{...r,title:mdTit(m),cover:mdCov(m,'128')};});
-}
-async function mdSearch(q){
-  const d=await apiFetch(`${MDEX}/manga?title=${encodeURIComponent(q)}&limit=8&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&hasAvailableChapters=true`).catch(()=>null);
-  return(d?.data||[]).map(mdCard);
-}
-async function mdBrowse(off,gid){
-  let url=`${MDEX}/manga?limit=24&offset=${off}&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[followedCount]=desc&hasAvailableChapters=true`;
-  if(gid)url+=`&includedTags[]=${gid}`;
-  const d=await apiFetch(url).catch(()=>null);
-  return(d?.data||[]).map(mdCard);
-}
+});
 
 /* ═══════════════════════════════════════
-   MANGAKAKALOT (via api/manga.js scraper)
+   PROVIDER STUBS — official platforms
+   ───────────────────────────────────────
+   available:false, so gather() skips them and the source bar
+   shows them greyed. Implement the methods, flip the flag, done —
+   no other file changes needed.
+
+   Status of each, as of writing:
+
+   MangaPlus (Shueisha)  no public API. Traffic is protobuf-encoded
+                         and page images are obfuscated client-side.
+                         I won't write the de-obfuscation step.
+   Webtoon (Naver)       no public API. Mobile endpoints require
+                         signed auth headers.
+   Tapas                 no published API. Some JSON endpoints back
+                         the web reader; undocumented, unversioned.
+   Comikey               no public API.
+   GlobalComix           api.globalcomix.com fronts the reading site
+                         rather than an open API. Worth an email to
+                         them — they work with indie creators and may
+                         issue a key.
+
+   Verify anything you implement against live responses. Don't trust
+   a shape you got from an LLM, including me.
 ═══════════════════════════════════════ */
-async function mkFeatured(type='topview'){
-  const d=await mkFetch({action:'list',type,page:'1'}).catch(()=>null);
-  return(d?.items||[]).filter(m=>m.image).map(mkCard);
-}
-async function mkFeaturedPage2(type='topview'){
-  const d=await mkFetch({action:'list',type,page:'2'}).catch(()=>null);
-  return(d?.items||[]).filter(m=>m.image).map(mkCard);
-}
-async function mkUpdates(){
-  const d=await mkFetch({action:'list',type:'latest',page:'1'}).catch(()=>null);
-  return(d?.items||[]).filter(m=>m.image&&m.chapter).map(m=>{
-    const numMatch=m.chapter.match(/(\d+(?:\.\d+)?)/);
-    return{mangaId:'mk:'+m.id,rawMangaId:m.id,rawChId:m.id+'::'+m.chapter,
-      chNum:numMatch?numMatch[1]:'',chTitle:'',time:'',src:'mk',
-      title:m.title,cover:m.image?imgSrc(m.image):''};
+function stubProvider(id,label,note){
+  registerProvider({
+    id,label,available:false,note,
+    capabilities:{list:false,search:false,browse:false,updates:false},
+    async list(){return[];},
+    async search(){return[];},
+    async browse(){return[];},
+    async updates(){return[];},
+    async detail(){return null;},
+    async chapters(){return[];},
+    async pages(){return[];}
   });
 }
-async function mkSearch(q){
-  const d=await mkFetch({action:'search',q}).catch(()=>null);
-  return(d?.items||[]).filter(m=>m.image).map(mkCard);
-}
-async function mkBrowse(page,category){
-  const d=await mkFetch({action:'list',type:'topview',category:category||'all',page:String(page)}).catch(()=>null);
-  return(d?.items||[]).filter(m=>m.image).map(mkCard);
-}
-async function mkDetail(id){
-  const d=await mkFetch({action:'detail',id}).catch(()=>null);
-  if(!d?.title)return null;
-  return{id:'mk:'+id,rawId:id,src:'mk',title:d.title,cover:d.image?imgSrc(d.image):'',
-    lang:'ja',status:d.status||'',desc:d.desc||'',author:d.author||'Unknown'};
-}
-async function mkChapters(id){
-  const d=await mkFetch({action:'detail',id}).catch(()=>null);
-  if(!d?.chapters)return[];
-  return d.chapters.map(c=>({id:'mk:'+c.id,rawId:c.id,src:'mk',num:c.num,title:c.name||'',date:c.date}));
-}
-async function mkPages(chid){
-  const d=await mkFetch({action:'pages',chid}).catch(()=>null);
-  return(d?.pages||[]).map(p=>imgSrc(p));
-}
-async function mdDetail(id){
-  const d=await apiFetch(`${MDEX}/manga/${id}?includes[]=cover_art&includes[]=author`).catch(()=>null);
-  if(!d?.data)return null;
-  const m=d.data;
-  return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),
-    lang:m.attributes?.originalLanguage,status:m.attributes?.status||'',year:m.attributes?.year||'',
-    desc:m.attributes?.description?.en||Object.values(m.attributes?.description||{})[0]||'',
-    author:(m.relationships||[]).find(r=>r.type==='author')?.attributes?.name||'Unknown'};
-}
-async function mdChapters(id){
-  let all=[],off=0;
-  while(true){
-    const d=await apiFetch(`${MDEX}/manga/${id}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=asc&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
-    if(!d?.data?.length)break;
-    const valid=d.data.filter(c=>!c.attributes.externalUrl);
-    all=all.concat(valid);
-    if(d.data.length<96)break;off+=96;if(off>1920)break;
-  }
-  const seen={};
-  for(const c of all){const n=c.attributes.chapter||'oneshot';if(!seen[n])seen[n]=c;}
-  return Object.values(seen)
-    .sort((a,b)=>parseFloat(a.attributes.chapter||0)-parseFloat(b.attributes.chapter||0))
-    .map(c=>({id:c.id,rawId:c.id,src:'md',num:c.attributes.chapter,title:c.attributes.title||'',date:c.attributes.publishAt}));
-}
-async function mdPages(id){
-  const d=await apiFetch(`${MDEX}/at-home/server/${id}`).catch(()=>null);
-  if(!d?.chapter)return[];
-  const{baseUrl,chapter:{hash,dataSaver,data}}=d;
-  const pg=dataSaver||data,folder=dataSaver?'data-saver':'data';
-  try{const u=new URL(baseUrl);console.log('[Inkflow] CDN:',u.hostname);}catch{}
-  return pg.map(p=>imgSrc(`${baseUrl}/${folder}/${hash}/${p}`));
-}
-
-/* ═══════════════════════════════════════
-   HERO BANNER
-═══════════════════════════════════════ */
-function setHero(idx){
-  if(!heroItems.length)return;
-  const item=heroItems[idx];
-  heroIdx=idx;
-  document.getElementById('hero-bg').style.backgroundImage=`url('${item.cover}')`;
-  document.getElementById('hero-img').src=item.cover;
-  document.getElementById('hero-title').textContent=item.title;
-  document.getElementById('hero-badge').textContent='● '+({popular:'Popular',new:'New Release',top:'Top Rated'}[hMode]||'Featured');
-  // dots
-  const dots=document.getElementById('hero-dots');
-  dots.innerHTML=heroItems.slice(0,8).map((_,i)=>`<div class="hero-dot${i===idx?' on':''}" onclick="setHero(${i})"></div>`).join('');
-  // buttons
-  document.getElementById('hero-read').onclick=()=>showDetail(item.id);
-  document.getElementById('hero-more').onclick=()=>showDetail(item.id);
-  // load desc
-  apiFetch(`${MDEX}/manga/${item.rawId}?includes[]=cover_art`).then(d=>{
-    const desc=d?.data?.attributes?.description?.en||Object.values(d?.data?.attributes?.description||{})[0]||'';
-    document.getElementById('hero-desc').textContent=desc;
-  }).catch(()=>{});
-}
-function startHeroTimer(){
-  clearInterval(heroTimer);
-  heroTimer=setInterval(()=>{
-    if(heroItems.length)setHero((heroIdx+1)%Math.min(heroItems.length,8));
-  },6000);
-}
+stubProvider('mp','MangaPlus','protobuf transport; images obfuscated');
+stubProvider('wt','Webtoon','signed auth headers required');
+stubProvider('tp','Tapas','undocumented JSON endpoints');
+stubProvider('ck','Comikey','no public API');
+stubProvider('gc','GlobalComix','request a key from the publisher');
 
 /* ═══════════════════════════════════════
    RENDER
@@ -614,7 +694,7 @@ function mCard(item){
       ${item.cover?`<img src="${esc(item.cover)}" alt="${esc(item.title)}" onload="this.classList.add('vis')" onerror="this.style.display='none'" loading="lazy">`:''}
       <div class="mov">
         <div class="mtt">${esc(item.title)}</div>
-        <div class="mst">${tbadge(item.lang)}<span style="color:var(--tx3)">${item.status||''}</span></div>
+        <div class="mst">${tbadge(item.lang)}${srcBadge(item.id)}</div>
       </div>
     </div>
   </div>`;
@@ -622,9 +702,7 @@ function mCard(item){
 function uRow(u){
   const n=u.chNum?`Ch. ${u.chNum}`:'Oneshot';
   const t=u.chTitle?` — ${u.chTitle}`:'';
-  const mid=encodeURIComponent(u.rawMangaId||u.mangaId||'');
-  const cid=encodeURIComponent(u.rawChId||'');
-  return`<div class="ur" onclick="openUpdate('${esc(u.src)}','${mid}','${cid}')">
+  return`<div class="ur" onclick="openUpdate('${esc(u.src)}','${encodeURIComponent(u.rawMangaId||'')}','${encodeURIComponent(u.rawChId||'')}')">
     <div class="uth">${u.cover?`<img src="${esc(u.cover)}" onload="this.classList.add('vis')" onerror="this.style.display='none'" loading="lazy">`:'📖'}</div>
     <div class="ui">
       <div class="utt">${esc(u.title)}</div>
@@ -638,6 +716,7 @@ function uRow(u){
    HOME
 ═══════════════════════════════════════ */
 async function loadHome(){
+  renderSrcBar();
   loadFeatured();loadHomeUpdates();
   clearInterval(refreshTimer);
   refreshTimer=setInterval(()=>{
@@ -649,22 +728,8 @@ async function loadFeatured(){
   const g=document.getElementById('hg');
   g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){g.innerHTML='<div class="emp">⚠️ Set up your proxy — click the yellow banner above.</div>';return;}
-  const ord=hMode==='popular'?'followedCount':hMode==='top'?'rating':'createdAt';
-  const mkType=hMode==='new'?'newest':'topview';
-  const[p1,p2,p3,p4,p5]=await Promise.allSettled([
-    apiFetch(`${MDEX}/manga?limit=24&offset=0&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
-    apiFetch(`${MDEX}/manga?limit=24&offset=24&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
-    apiFetch(`${MDEX}/manga?limit=24&offset=48&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&order[${ord}]=desc&hasAvailableChapters=true`),
-    mkFeatured(mkType),
-    mkFeaturedPage2(mkType)
-  ]);
-  const items=dedup([
-    ...(p1.status==='fulfilled'?(p1.value?.data||[]):[]).map(mdCard),
-    ...(p2.status==='fulfilled'?(p2.value?.data||[]):[]).map(mdCard),
-    ...(p3.status==='fulfilled'?(p3.value?.data||[]):[]).map(mdCard),
-    ...(p4.status==='fulfilled'?p4.value:[]),
-    ...(p5.status==='fulfilled'?p5.value:[])
-  ]);
+  if(!activeProviders('list').length){g.innerHTML='<div class="emp">No sources enabled.</div>';return;}
+  const items=dedup(await gather('list',p=>p.list({mode:hMode})));
   g.innerHTML=items.length?items.map(mCard).join(''):'<div class="emp">Could not load. Check your proxy.</div>';
   heroItems=items.filter(i=>i.cover).slice(0,8);
   if(heroItems.length){setHero(0);startHeroTimer();}
@@ -673,8 +738,7 @@ async function loadHomeUpdates(){
   const el=document.getElementById('hu');
   el.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){el.innerHTML='';return;}
-  const[a,b]=await Promise.allSettled([mdUpdates(),mkUpdates()]);
-  const upd=dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
+  const upd=dedup(await gather('updates',p=>p.updates()));
   el.innerHTML=upd.length?upd.slice(0,30).map(uRow).join(''):'<div class="emp">No updates found.</div>';
 }
 function htab(mode,el){
@@ -684,33 +748,55 @@ function htab(mode,el){
 }
 
 /* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+function setHero(idx){
+  if(!heroItems.length)return;
+  const item=heroItems[idx];heroIdx=idx;
+  document.getElementById('hero-bg').style.backgroundImage=`url('${item.cover}')`;
+  document.getElementById('hero-img').src=item.cover;
+  document.getElementById('hero-title').textContent=item.title;
+  document.getElementById('hero-badge').textContent='● '+({popular:'Popular',new:'New Release',top:'Top Rated'}[hMode]||'Featured');
+  document.getElementById('hero-dots').innerHTML=
+    heroItems.slice(0,8).map((_,i)=>`<div class="hero-dot${i===idx?' on':''}" onclick="setHero(${i})"></div>`).join('');
+  document.getElementById('hero-read').onclick=()=>showDetail(item.id);
+  document.getElementById('hero-more').onclick=()=>showDetail(item.id);
+  document.getElementById('hero-desc').textContent='';
+  const p=providerFor(item.id);
+  if(p?.detail){
+    p.detail(item.rawId).then(d=>{
+      if(heroIdx===idx&&d)document.getElementById('hero-desc').textContent=d.desc||'';
+    }).catch(()=>{});
+  }
+}
+function startHeroTimer(){
+  clearInterval(heroTimer);
+  heroTimer=setInterval(()=>{
+    if(heroItems.length)setHero((heroIdx+1)%Math.min(heroItems.length,8));
+  },6000);
+}
+
+/* ═══════════════════════════════════════
    UPDATES PAGE
 ═══════════════════════════════════════ */
 async function loadUpdates(){
   const el=document.getElementById('ul');
   el.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){el.innerHTML='<div class="emp">Set up your proxy first.</div>';return;}
-  const[a,b]=await Promise.allSettled([mdUpdates(),mkUpdates()]);
-  const upd=dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
+  const upd=dedup(await gather('updates',p=>p.updates()));
   el.innerHTML=upd.length?upd.map(uRow).join(''):'<div class="emp">No updates found.</div>';
 }
 
 /* ═══════════════════════════════════════
    BROWSE
 ═══════════════════════════════════════ */
-let bPage=1,bCat='all';
 async function loadBrowse(reset=true){
-  if(reset){bOff=0;bPage=1;}
+  if(reset)bOff=0;
   const g=document.getElementById('bg');
   if(reset)g.innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   if(!PROXY_BASE){g.innerHTML='<div class="emp">Set up your proxy first.</div>';return;}
-  const[p1,p2,p3]=await Promise.allSettled([mdBrowse(bOff,bGenreId),mdBrowse(bOff+24,bGenreId),mkBrowse(bPage,bCat)]);
-  const items=dedup([
-    ...(p1.status==='fulfilled'?p1.value:[]),
-    ...(p2.status==='fulfilled'?p2.value:[]),
-    ...(p3.status==='fulfilled'?p3.value:[])
-  ]);
-  bOff+=48;bPage++;
+  const items=dedup(await gather('browse',p=>p.browse({offset:bOff,tagId:bGenreId})));
+  bOff+=48;
   if(reset)g.innerHTML='';
   if(!items.length&&reset){g.innerHTML='<div class="emp">No results found.</div>';return;}
   g.innerHTML+=items.map(mCard).join('');
@@ -746,12 +832,11 @@ document.addEventListener('click',e=>{if(!e.target.closest('.sw'))document.getEl
 async function doSearch(q){
   const drop=document.getElementById('sd');
   if(!PROXY_BASE){drop.innerHTML='<div class="emp" style="padding:14px">Set up proxy first</div>';return;}
-  const[a,b]=await Promise.allSettled([mdSearch(q),mkSearch(q)]);
-  const results=dedup([...(a.status==='fulfilled'?a.value:[]),...(b.status==='fulfilled'?b.value:[])]);
+  const results=dedup(await gather('search',p=>p.search(q),10000));
   if(!results.length){drop.innerHTML='<div class="emp" style="padding:14px">No results found</div>';return;}
   drop.innerHTML=results.map(m=>`<div class="di" onclick="searchPick('${esc(m.id)}')">
     ${m.cover?`<img class="dth" src="${esc(m.cover)}" onload="this.classList.add('vis')" onerror="this.style.opacity='0'" loading="lazy">`:'<div class="dth" style="display:flex;align-items:center;justify-content:center">📖</div>'}
-    <div class="din"><p>${esc(m.title)}</p><small>${m.status||''}</small></div>
+    <div class="din"><p>${esc(m.title)}</p><small>${esc(providerFor(m.id)?.label||'')}${m.status?' · '+esc(m.status):''}</small></div>
   </div>`).join('');
 }
 function searchPick(id){document.getElementById('sd').style.display='none';document.getElementById('si').value='';showDetail(id);}
@@ -775,12 +860,12 @@ function renderHistoryPage(){
   if(!hist.length){el.innerHTML='<div class="emp">📖 No history yet. Start reading!</div>';return;}
   el.innerHTML=hist.map(h=>`<div class="hrow" onclick="resumeFromHistory('${esc(h.mangaId)}','${esc(h.chId)}')">
     <div class="hcov">${h.mangaCover?`<img src="${esc(h.mangaCover)}" onload="this.classList.add('vis')" loading="lazy">`:'📖'}</div>
-    <div class="hi"><div class="htt">${esc(h.mangaTitle||'Unknown')}</div><div class="hch">Last: Ch. ${esc(h.chNum||'?')}</div></div>
+    <div class="hi"><div class="htt">${esc(h.mangaTitle||'Untitled')}</div><div class="hch">Last: Ch. ${esc(h.chNum||'?')}</div></div>
     <div class="htime">${rt(h.time)}</div>
   </div>`).join('');
 }
 async function resumeFromHistory(mangaId,chId){
-  await openUpdate(mangaId.split(':')[0],mangaId.split(':').slice(1).join(':'),chId);
+  await openUpdate(String(mangaId).split(':')[0],rawOf(mangaId),chId);
 }
 
 /* ═══════════════════════════════════════
@@ -793,25 +878,28 @@ async function showDetail(id){
   ['dm','dd','dbs'].forEach(i=>document.getElementById(i).innerHTML='');
   document.getElementById('chl').innerHTML='<div class="lw"><div class="spin"></div> Loading…</div>';
   document.getElementById('cht').textContent='Chapters';
-  const parts=id.split(':'),src=parts[0];
-  let detail=null;
-  if(src==='md')detail=await mdDetail(parts[1]);
-  else if(src==='mk')detail=await mkDetail(parts.slice(1).join(':'));
+
+  const prov=providerFor(id);
+  if(!prov){document.getElementById('dtt').textContent='Unknown source.';return;}
+  const detail=await prov.detail(rawOf(id)).catch(()=>null);
   if(!detail){document.getElementById('dtt').textContent='Failed to load.';return;}
+
   curManga=detail;
-  document.title=detail.title+' — Inkflow';
-  document.getElementById('dtt').textContent=detail.title;
+  const shown=detail.title||'Untitled';
+  document.title=shown+' — Inkflow';
+  document.getElementById('dtt').textContent=shown;
   const covImg=document.getElementById('dcv');
   if(detail.cover){covImg.src=detail.cover;covImg.onload=()=>covImg.classList.add('vis');}
   document.getElementById('dd').textContent=detail.desc||'No description available.';
   document.getElementById('dm').innerHTML=
-    tbadge(detail.lang)+
-    (detail.status?`<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${detail.status}</span>`:'')+
-    (detail.year?`<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${detail.year}</span>`:'');
-  const chs=src==='mk'?await mkChapters(parts.slice(1).join(':')):await mdChapters(parts[1]);
-  curChapters=chs; // ascending: index 0 = ch1, last = latest
+    tbadge(detail.lang)+srcBadge(detail.id)+
+    (detail.status?`<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${esc(detail.status)}</span>`:'')+
+    (detail.year?`<span class="badge" style="background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2)">${esc(detail.year)}</span>`:'');
+
+  curChapters=await prov.chapters(rawOf(id)).catch(()=>[]);
   renderChs();
   document.getElementById('cht').textContent=`${curChapters.length} Chapters`;
+
   const lastRead=getLastRead(detail.id);
   const lastReadIdx=lastRead?curChapters.findIndex(c=>c.rawId===lastRead.chId):-1;
   let btns='';
@@ -872,9 +960,10 @@ async function loadPages(ch){
   document.getElementById('pr').style.display='none';
   document.getElementById('sr').style.display='flex';
   document.getElementById('rl').style.display='flex';
-  let pg=[];
-  if(ch.src==='md')pg=await mdPages(ch.rawId).catch(()=>[]);
-  else if(ch.src==='mk')pg=await mkPages(ch.rawId).catch(()=>[]);
+
+  const prov=providerFor(ch.id||(ch.src+':'));
+  const pg=prov?await prov.pages(ch.rawId).catch(()=>[]):[];
+
   document.getElementById('rl').style.display='none';
   if(!pg.length){
     document.getElementById('sr').innerHTML=`<div style="text-align:center;padding:60px 20px;max-width:480px;margin:0 auto">
@@ -916,21 +1005,27 @@ function setMode(m){
   renderReader();
 }
 function navCh(dir){const ni=curChIdx+dir;if(ni>=0&&ni<curChapters.length)openCh(ni);}
+
 async function openUpdate(src,rawMangaId,rawChId){
   rawMangaId=decodeURIComponent(rawMangaId);rawChId=decodeURIComponent(rawChId);
-  showReader();document.getElementById('rttl').textContent='Loading…';document.getElementById('rl').style.display='flex';
+  showReader();
+  document.getElementById('rttl').textContent='Loading…';
+  document.getElementById('rl').style.display='flex';
+
+  const prov=PROVIDERS.get(src);
+  if(!prov){document.getElementById('rttl').textContent='Unknown source.';document.getElementById('rl').style.display='none';return;}
+
   const fullId=`${src}:${rawMangaId}`;
   if(!curManga||curManga.id!==fullId){
-    const det=src==='mk'?await mkDetail(rawMangaId):await mdDetail(rawMangaId);
+    const det=await prov.detail(rawMangaId).catch(()=>null);
     if(det){
       curManga=det;
-      const chs=src==='mk'?await mkChapters(rawMangaId):await mdChapters(rawMangaId);
-      curChapters=chs;
+      curChapters=await prov.chapters(rawMangaId).catch(()=>[]);
     }
   }
   const idx=curChapters.findIndex(c=>c.rawId===rawChId);
   curChIdx=idx>=0?idx:0;
-  const ch=curChapters[curChIdx]||{src:'md',rawId:rawChId,num:''};
+  const ch=curChapters[curChIdx]||{id:fullId,src,rawId:rawChId,num:''};
   document.getElementById('rttl').textContent=curManga?.title||'';
   document.getElementById('rci').textContent=ch.num?`Ch. ${ch.num}`:'';
   navBtns();await loadPages(ch);
@@ -980,7 +1075,7 @@ document.addEventListener('keydown',e=>{
 });
 
 /* INIT */
-checkProxy();goHome();loadHome();
+loadSrcPrefs();checkProxy();goHome();loadHome();
 </script>
 </body>
 </html>

@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#07070c">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Inkflow">
 <title>Inkflow</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -541,12 +546,12 @@ body.reading .botnav{display:none!important}
 <body>
 
 <div class="warn" id="pwarn">
-  <span>Inkflow needs a proxy to reach the MangaDex API from the browser.</span>
-  <button onclick="openModal('proxy')">Set one up</button>
+  <span>Could not reach the API from this browser. A proxy routes around network blocks and <code class="mono">file://</code> origins.</span>
+  <button onclick="openModal('proxy')">Add a proxy</button>
 </div>
 
 <nav class="bar">
-  <a class="logo" href="#" onclick="switchTab('home',document.querySelector('.nt'));return false;">Ink<em>flow</em></a>
+  <a class="logo" href="#/home">Ink<em>flow</em></a>
   <div class="sw">
     <span class="sico">⌕</span>
     <input id="si" type="text" placeholder="Search titles" autocomplete="off" spellcheck="false">
@@ -554,10 +559,10 @@ body.reading .botnav{display:none!important}
     <div id="sd"></div>
   </div>
   <div class="ntabs">
-    <button class="nt on" onclick="switchTab('home',this)">Home</button>
-    <button class="nt" onclick="switchTab('browse',this)">Browse</button>
-    <button class="nt" onclick="switchTab('library',this)">Library</button>
-    <button class="nt" onclick="switchTab('updates',this)">Updates</button>
+    <button class="nt on" onclick="switchTab('home')">Home</button>
+    <button class="nt" onclick="switchTab('browse')">Browse</button>
+    <button class="nt" onclick="switchTab('library')">Library</button>
+    <button class="nt" onclick="switchTab('updates')">Updates</button>
   </div>
   <button class="iconbtn" title="Open a random title" onclick="randomTitle()">⚄</button>
   <button class="iconbtn" title="Keyboard shortcuts" onclick="openModal('keys')">⌨</button>
@@ -606,7 +611,7 @@ body.reading .botnav{display:none!important}
     <div class="rule"></div>
     <div class="sech">
       <h2 class="sect"><span class="eyebrow">Fresh</span>Latest chapters</h2>
-      <button class="sa" onclick="switchTab('updates',document.querySelectorAll('.nt')[3])">See all →</button>
+      <button class="sa" onclick="switchTab('updates')">See all →</button>
     </div>
     <div id="hu" class="rows"></div>
   </main>
@@ -654,7 +659,12 @@ body.reading .botnav{display:none!important}
 <div id="lp" style="display:none"><main>
   <div class="sech">
     <h2 class="sect"><span class="eyebrow">Yours</span>Library</h2>
-    <button class="sa" onclick="checkLibraryUpdates(true)">Check for new chapters</button>
+    <div style="display:flex;gap:6px;align-items:center">
+      <button class="sa" onclick="checkLibraryUpdates(true)">Check for new chapters</button>
+      <button class="btn sm" onclick="exportLibrary()">Export</button>
+      <button class="btn sm" onclick="document.getElementById('impfile').click()">Import</button>
+      <input type="file" id="impfile" accept="application/json,.json" style="display:none" onchange="importLibrary(this)">
+    </div>
   </div>
   <div class="tbar">
     <button class="tab on" onclick="ltab('saved',this)">Saved</button>
@@ -697,6 +707,7 @@ body.reading .botnav{display:none!important}
     <button class="btn sm" onclick="togSort()" id="sortbtn">Newest first</button>
   </div>
   <div id="chl" class="chl"></div>
+  <div id="related"></div>
 </main></div>
 
 <!-- ══ READER ══ -->
@@ -750,11 +761,12 @@ body.reading .botnav{display:none!important}
 
 <!-- ══ MODALS ══ -->
 <div class="modal" id="m-proxy"><div class="modal-box">
-  <h2>Connect your proxy</h2>
-  <p>Browsers block direct calls to the MangaDex API, so Inkflow routes them through a proxy you host. Deploy <code class="mono">api/proxy.js</code> to Vercel and paste the URL here.</p>
+  <h2>Optional: add a proxy</h2>
+  <p>Inkflow talks to the API directly and only needs this when that fails — typically when the page is open from a <code class="mono">file://</code> path, or on a network that blocks the API. Deploy <code class="mono">api/proxy.js</code> to Vercel and paste the URL.</p>
   <input id="proxy-input" class="txt" type="text" placeholder="https://inkflow-proxy.vercel.app">
   <div style="display:flex;gap:8px">
     <button class="btn p" style="flex:1;justify-content:center" onclick="saveProxy()">Save and reload</button>
+    <button class="btn" onclick="clearProxy()" id="clearproxy" style="display:none">Remove</button>
     <button class="btn" onclick="closeModal()">Cancel</button>
   </div>
 </div></div>
@@ -821,23 +833,66 @@ body.reading .botnav{display:none!important}
 /* ══════════════════════════════════════════════════
    PROXY
 ══════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════
+   NETWORK
+   The API sends permissive CORS headers, so JSON calls
+   normally go straight from the browser. A proxy is only
+   a fallback for when they don't (a null origin from
+   file://, a blocking network, a regional block).
+
+   Images never needed either route: <img> loads are not
+   subject to CORS, so covers and pages always go direct.
+══════════════════════════════════════════════════ */
 let PROXY_BASE=localStorage.getItem('inkflow_proxy')||'';
+const NET={route:'unknown'};   /* unknown | direct | proxy */
+
 function proxyURL(u){if(!PROXY_BASE)return null;return PROXY_BASE.replace(/\/$/,'')+'/api/proxy?url='+encodeURIComponent(u);}
-async function apiFetch(url){
-  const p=proxyURL(url);
-  if(!p)throw new Error('NO_PROXY');
-  const r=await fetch(p,{signal:AbortSignal.timeout(20000)});
+
+async function rawFetch(url,ms=20000){
+  const r=await fetch(url,{signal:AbortSignal.timeout(ms)});
   if(!r.ok)throw new Error('HTTP '+r.status);
   return r.json();
 }
-function imgSrc(u){if(!u)return'';return proxyURL(u)||u;}
+async function apiFetch(url){
+  /* settled route: use it, but let direct fall back once if it breaks */
+  if(NET.route==='proxy'&&PROXY_BASE){
+    try{return await rawFetch(proxyURL(url));}
+    catch(e){NET.route='unknown';}
+  }
+  if(NET.route==='direct'){
+    try{return await rawFetch(url);}
+    catch(e){if(!PROXY_BASE)throw e;NET.route='unknown';}
+  }
+  /* unknown: try direct, then proxy */
+  try{
+    const d=await rawFetch(url);
+    if(NET.route!=='direct'){NET.route='direct';onRouteFound();}
+    return d;
+  }catch(e){
+    if(!PROXY_BASE)throw new Error('NO_ROUTE');
+    const d=await rawFetch(proxyURL(url));
+    NET.route='proxy';onRouteFound();
+    return d;
+  }
+}
+function onRouteFound(){document.getElementById('pwarn').classList.remove('show');}
+
+/* images bypass CORS entirely */
+function imgSrc(u){return u||'';}
+
 function saveProxy(){
   let v=document.getElementById('proxy-input').value.trim().replace(/\/$/,'');
   if(!v)return toast('Enter a proxy URL first','err');
   if(!v.startsWith('http'))v='https://'+v;
   localStorage.setItem('inkflow_proxy',v);location.reload();
 }
-function checkProxy(){document.getElementById('pwarn').classList.toggle('show',!PROXY_BASE);}
+function clearProxy(){
+  localStorage.removeItem('inkflow_proxy');location.reload();
+}
+/* the banner is now a failure state, not a first-run gate */
+function showNoRoute(){
+  document.getElementById('pwarn').classList.add('show');
+}
 
 /* ══════════════════════════════════════════════════
    STATE
@@ -858,8 +913,51 @@ const RS=Object.assign({mode:'scroll',fit:'w',dir:'ltr',spread:false},
 function saveRS(){localStorage.setItem('inkflow_reader',JSON.stringify(RS));}
 
 /* ══════════════════════════════════════════════════
-   TOASTS
+   CACHE
+   Chapter feeds for a long series cost several round
+   trips, and the old build refetched them every time you
+   opened a title or stepped a chapter. Keyed by request,
+   TTL by volatility.
 ══════════════════════════════════════════════════ */
+const CACHE=new Map();
+const TTL={detail:30*60e3,chapters:5*60e3,list:5*60e3,tags:24*60*60e3};
+async function cached(key,ttl,fn){
+  const hit=CACHE.get(key);
+  if(hit&&Date.now()-hit.t<ttl)return hit.v;
+  const v=await fn();
+  CACHE.set(key,{t:Date.now(),v});
+  if(CACHE.size>180){const k=CACHE.keys().next().value;CACHE.delete(k);}
+  return v;
+}
+function bustCache(prefix){
+  for(const k of[...CACHE.keys()])if(k.startsWith(prefix))CACHE.delete(k);
+}
+
+/* ══════════════════════════════════════════════════
+   ROUTING
+   Hash routes so the browser back button, bookmarks and
+   the Android back gesture all behave. Every navigation
+   pushes a hash; hashchange is the single render trigger.
+══════════════════════════════════════════════════ */
+const TABS=['home','browse','library','updates'];
+function go(hash){
+  if(location.hash===hash)handleRoute();
+  else location.hash=hash;
+}
+async function handleRoute(){
+  const raw=decodeURIComponent(location.hash.replace(/^#\/?/,''));
+  if(!raw)return renderTab('home');
+  const parts=raw.split('/');
+  const kind=parts[0];
+  if(TABS.includes(kind))return renderTab(kind);
+  if(kind==='title'&&parts[1])return renderDetail(parts.slice(1).join('/'));
+  if(kind==='read'&&parts[2]){
+    const mangaId=parts[1],chId=parts.slice(2).join('/');
+    return renderReaderRoute(mangaId,chId);
+  }
+  renderTab('home');
+}
+window.addEventListener('hashchange',handleRoute);
 function toast(msg,kind='ok'){
   const el=document.createElement('div');
   el.className='toast '+kind;el.textContent=msg;
@@ -869,7 +967,10 @@ function toast(msg,kind='ok'){
 function openModal(which){
   document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));
   document.getElementById('m-'+which).classList.add('open');
-  if(which==='proxy')document.getElementById('proxy-input').value=PROXY_BASE;
+  if(which==='proxy'){
+    document.getElementById('proxy-input').value=PROXY_BASE;
+    document.getElementById('clearproxy').style.display=PROXY_BASE?'':'none';
+  }
 }
 function closeModal(){document.querySelectorAll('.modal').forEach(m=>m.classList.remove('open'));}
 document.addEventListener('click',e=>{if(e.target.classList.contains('modal'))closeModal();});
@@ -981,9 +1082,11 @@ registerProvider({
 
   async list({mode,lang}){
     const ord=mode==='popular'?'followedCount':mode==='top'?'rating':'createdAt';
-    const rs=await Promise.allSettled([0,96,192].map(off=>
-      apiFetch(`${MDEX}/manga?limit=96&offset=${off}${MD_BASE}${mdLang(lang)}&order[${ord}]=desc`)));
-    return rs.flatMap(r=>r.status==='fulfilled'?(r.value?.data||[]):[]).map(mdCard);
+    return cached(`list:${ord}:${lang||'all'}`,TTL.list,async()=>{
+      const rs=await Promise.allSettled([0,96,192].map(off=>
+        apiFetch(`${MDEX}/manga?limit=96&offset=${off}${MD_BASE}${mdLang(lang)}&order[${ord}]=desc`)));
+      return rs.flatMap(r=>r.status==='fulfilled'?(r.value?.data||[]):[]).map(mdCard);
+    });
   },
 
   async search(q){
@@ -1022,29 +1125,46 @@ registerProvider({
   },
 
   async detail(raw){
-    const d=await apiFetch(`${MDEX}/manga/${raw}?includes[]=cover_art&includes[]=author`).catch(()=>null);
-    if(!d?.data)return null;
-    const m=d.data;
-    return{...mdCard(m),
-      desc:m.attributes?.description?.en||Object.values(m.attributes?.description||{})[0]||'',
-      author:(m.relationships||[]).find(r=>r.type==='author')?.attributes?.name||'',
-      tags:(m.attributes?.tags||[]).map(t=>t.attributes?.name?.en).filter(Boolean).slice(0,6)};
+    return cached('detail:'+raw,TTL.detail,async()=>{
+      const d=await apiFetch(`${MDEX}/manga/${raw}?includes[]=cover_art&includes[]=author`).catch(()=>null);
+      if(!d?.data)return null;
+      const m=d.data;
+      return{...mdCard(m),
+        desc:m.attributes?.description?.en||Object.values(m.attributes?.description||{})[0]||'',
+        author:(m.relationships||[]).find(r=>r.type==='author')?.attributes?.name||'',
+        tags:(m.attributes?.tags||[]).map(t=>t.attributes?.name?.en).filter(Boolean).slice(0,6),
+        related:(m.relationships||[]).filter(r=>r.type==='manga'&&r.related)
+          .map(r=>({rawId:r.id,how:r.related})).slice(0,12)};
+    });
+  },
+
+  /* resolve related ids into displayable cards */
+  async relatedTitles(list){
+    if(!list?.length)return[];
+    const ids=list.map(r=>r.rawId).slice(0,12);
+    return cached('rel:'+ids.join(','),TTL.detail,async()=>{
+      const d=await apiFetch(`${MDEX}/manga?ids[]=${ids.join('&ids[]=')}&includes[]=cover_art&limit=12&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
+      const by={};(d?.data||[]).forEach(m=>by[m.id]=m);
+      return list.map(r=>by[r.rawId]?{...mdCard(by[r.rawId]),how:r.how}:null).filter(Boolean);
+    });
   },
 
   async chapters(raw){
-    let all=[],off=0;
-    while(true){
-      const d=await apiFetch(`${MDEX}/manga/${raw}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=asc&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
-      if(!d?.data?.length)break;
-      all=all.concat(d.data.filter(c=>!c.attributes.externalUrl));
-      if(d.data.length<96)break;off+=96;if(off>2880)break;
-    }
-    const seen={};
-    for(const c of all){const n=c.attributes.chapter||'oneshot';if(!seen[n])seen[n]=c;}
-    return Object.values(seen)
-      .sort((a,b)=>parseFloat(a.attributes.chapter||0)-parseFloat(b.attributes.chapter||0))
-      .map(c=>({id:'md:'+c.id,rawId:c.id,src:'md',num:c.attributes.chapter,
-        title:c.attributes.title||'',date:c.attributes.publishAt,pages:c.attributes.pages}));
+    return cached('chs:'+raw,TTL.chapters,async()=>{
+      let all=[],off=0;
+      while(true){
+        const d=await apiFetch(`${MDEX}/manga/${raw}/feed?limit=96&offset=${off}&translatedLanguage[]=en&order[chapter]=asc&contentRating[]=safe&contentRating[]=suggestive`).catch(()=>null);
+        if(!d?.data?.length)break;
+        all=all.concat(d.data.filter(c=>!c.attributes.externalUrl));
+        if(d.data.length<96)break;off+=96;if(off>2880)break;
+      }
+      const seen={};
+      for(const c of all){const n=c.attributes.chapter||'oneshot';if(!seen[n])seen[n]=c;}
+      return Object.values(seen)
+        .sort((a,b)=>parseFloat(a.attributes.chapter||0)-parseFloat(b.attributes.chapter||0))
+        .map(c=>({id:'md:'+c.id,rawId:c.id,src:'md',num:c.attributes.chapter,
+          title:c.attributes.title||'',date:c.attributes.publishAt,pages:c.attributes.pages}));
+    });
   },
 
   async pages(raw){
@@ -1150,9 +1270,15 @@ async function loadHome(){
 async function loadFeatured(){
   const g=document.getElementById('hg');
   g.innerHTML=skGrid();
-  if(!PROXY_BASE){g.innerHTML=emptyBlock('No proxy connected','Inkflow reads the MangaDex API through a proxy you host. Connect one to load the catalog.','Set one up','openModal(\'proxy\')');return;}
   const items=dedup(await gather('list',p=>p.list({mode:hMode,lang:typeFilter})));
-  if(!items.length){g.innerHTML=emptyBlock('Nothing came back','The source may be unreachable, or your proxy may be misconfigured.','Retry','loadFeatured()');return;}
+  if(!items.length){
+    showNoRoute();
+    g.innerHTML=emptyBlock('Could not reach the catalog',
+      PROXY_BASE?'Both the direct connection and your proxy failed. The source may be down.'
+                :'The browser could not reach the API directly. This usually means a network block, or that the page is open from a file:// path. Adding a proxy works around both.',
+      PROXY_BASE?'Retry':'Add a proxy',PROXY_BASE?'loadFeatured()':'openModal(\'proxy\')');
+    return;
+  }
   g.innerHTML=items.map(card).join('');
   heroItems=items.filter(i=>i.cover).slice(0,6);
   if(heroItems.length){setHero(0);startHero();}
@@ -1160,9 +1286,8 @@ async function loadFeatured(){
 async function loadHomeUpdates(){
   const el=document.getElementById('hu');
   if(!el.children.length)el.innerHTML=skRows();
-  if(!PROXY_BASE){el.innerHTML='';return;}
   const upd=dedup(await gather('updates',p=>p.updates()));
-  el.innerHTML=upd.length?upd.slice(0,14).map(updRow).join(''):emptyBlock('No recent chapters','Nothing new has been published in the last window.');
+  el.innerHTML=upd.length?upd.slice(0,14).map(updRow).join(''):'';
 }
 function htab(mode,el){
   hMode=mode;
@@ -1214,7 +1339,6 @@ function libraryTitles(){
   return[...seen.values()].slice(0,24);
 }
 async function checkLibraryUpdates(loud){
-  if(!PROXY_BASE)return;
   const titles=libraryTitles();
   if(!titles.length){document.getElementById('libshelf').innerHTML='';return;}
   if(loud)toast('Checking for new chapters…');
@@ -1284,14 +1408,65 @@ function clearHistory(){
 }
 
 /* ══════════════════════════════════════════════════
+   BACKUP
+   Everything lives in localStorage, so clearing browser
+   data or switching devices wipes it. Export writes a
+   single JSON file; import merges rather than replaces.
+══════════════════════════════════════════════════ */
+function exportLibrary(){
+  const data={
+    version:1,exported:new Date().toISOString(),
+    saved:saved(),history:history_(),
+    positions:LS.get('inkflow_pos',{}),reader:RS
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`inkflow-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();URL.revokeObjectURL(a.href);
+  toast(`Exported ${data.saved.length} saved, ${data.history.length} history entries`);
+}
+function importLibrary(input){
+  const file=input.files?.[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(!d||typeof d!=='object')throw new Error('shape');
+      /* merge: existing entries win on id, incoming fills the gaps */
+      const sv=saved(),svIds=new Set(sv.map(s=>s.id));
+      (d.saved||[]).forEach(s=>{if(s?.id&&!svIds.has(s.id)){sv.push(s);svIds.add(s.id);}});
+      LS.set('inkflow_saved',sv);
+
+      const h=history_(),hKeys=new Set(h.map(x=>x.mangaId+'|'+x.chId));
+      (d.history||[]).forEach(x=>{if(x?.mangaId&&!hKeys.has(x.mangaId+'|'+x.chId)){h.push(x);hKeys.add(x.mangaId+'|'+x.chId);}});
+      h.sort((a,b)=>(b.time||0)-(a.time||0));
+      LS.set('inkflow_history',h.slice(0,300));
+
+      LS.set('inkflow_pos',Object.assign({},d.positions||{},LS.get('inkflow_pos',{})));
+      renderLibrary();
+      toast(`Merged ${(d.saved||[]).length} saved, ${(d.history||[]).length} history entries`);
+    }catch(e){toast('That file is not an Inkflow backup','err');}
+    input.value='';
+  };
+  r.readAsText(file);
+}
+
+/* ══════════════════════════════════════════════════
    UPDATES
 ══════════════════════════════════════════════════ */
 async function loadUpdates(){
   const el=document.getElementById('ul');
   el.innerHTML=skRows(12);
-  if(!PROXY_BASE){el.innerHTML=emptyBlock('No proxy connected','Connect a proxy to pull the chapter feed.','Set one up','openModal(\'proxy\')');return;}
   const upd=dedup(await gather('updates',p=>p.updates()));
-  el.innerHTML=upd.length?upd.map(updRow).join(''):emptyBlock('No recent chapters','Nothing new right now.');
+  if(!upd.length){
+    showNoRoute();
+    el.innerHTML=emptyBlock('Could not load the chapter feed',
+      PROXY_BASE?'Both the direct connection and your proxy failed.':'The browser could not reach the API. A proxy works around most causes.',
+      PROXY_BASE?'Retry':'Add a proxy',PROXY_BASE?'loadUpdates()':'openModal(\'proxy\')');
+    return;
+  }
+  el.innerHTML=upd.map(updRow).join('');
 }
 
 /* ══════════════════════════════════════════════════
@@ -1318,7 +1493,6 @@ function toggleMature(){
 async function loadBrowse(more=false){
   const g=document.getElementById('bg');
   if(!more){bOff=0;bDone=false;g.innerHTML=skGrid();}
-  if(!PROXY_BASE){g.innerHTML=emptyBlock('No proxy connected','Connect a proxy to browse.','Set one up','openModal(\'proxy\')');return;}
   if(bLoading||bDone)return;
   bLoading=true;
   document.getElementById('bsentinel').textContent='Loading…';
@@ -1327,7 +1501,15 @@ async function loadBrowse(more=false){
   if(!items.length){
     bDone=true;
     document.getElementById('bsentinel').textContent=more?'End of results':'';
-    if(!more)g.innerHTML=emptyBlock('Nothing matches those filters','Try widening the audience or status filter.','Reset filters','resetFilters()');
+    if(!more){
+      const anyFilter=bGenreId||document.getElementById('f-status').value||document.getElementById('f-demo').value||document.getElementById('f-lang').value;
+      g.innerHTML=anyFilter
+        ?emptyBlock('Nothing matches those filters','Try widening the audience or status filter.','Reset filters','resetFilters()')
+        :emptyBlock('Could not reach the catalog',
+            PROXY_BASE?'Both the direct connection and your proxy failed.':'The browser could not reach the API. A proxy works around most causes.',
+            PROXY_BASE?'Retry':'Add a proxy',PROXY_BASE?'loadBrowse()':'openModal(\'proxy\')');
+      if(!anyFilter)showNoRoute();
+    }
     bLoading=false;return;
   }
   g.insertAdjacentHTML('beforeend',items.map(card).join(''));
@@ -1385,7 +1567,6 @@ si.addEventListener('input',e=>{
 document.addEventListener('click',e=>{if(!e.target.closest('.sw'))document.getElementById('sd').style.display='none';});
 async function doSearch(q){
   const drop=document.getElementById('sd');
-  if(!PROXY_BASE){drop.innerHTML='<div style="padding:14px;font-size:12px;color:var(--paper-2)">Connect a proxy to search.</div>';return;}
   const res=dedup(await gather('search',p=>p.search(q),10000));
   if(!res.length){drop.innerHTML='<div style="padding:14px;font-size:12px;color:var(--paper-2)">No titles matched.</div>';return;}
   drop.innerHTML=res.map(m=>{
@@ -1400,23 +1581,23 @@ function pickSearch(id){
   si.value='';si.blur();showDetail(id);
 }
 async function randomTitle(){
-  if(!PROXY_BASE)return toast('Connect a proxy first','err');
   toast('Finding something…');
   const off=Math.floor(Math.random()*4000);
   const d=await apiFetch(`${MDEX}/manga?limit=1&offset=${off}${MD_BASE}&order[followedCount]=desc`).catch(()=>null);
   const m=d?.data?.[0];
   if(m&&mdTit(m))showDetail('md:'+m.id);
-  else toast('Nothing turned up, try again','err');
+  else toast('Could not reach the catalog','err');
 }
 
 /* ══════════════════════════════════════════════════
    DETAIL
 ══════════════════════════════════════════════════ */
-async function showDetail(id){
-  hideAll();document.getElementById('dp').style.display='block';
-  prevPage=current()||'home';window.scrollTo(0,0);
+async function renderDetail(id){
+  hideAll();document.body.classList.remove('reading');
+  document.getElementById('dp').style.display='block';
+  window.scrollTo(0,0);
   document.getElementById('dtt').textContent='Loading';
-  ['dmeta','dd','dbs'].forEach(i=>document.getElementById(i).innerHTML='');
+  ['dmeta','dd','dbs','related'].forEach(i=>document.getElementById(i).innerHTML='');
   document.getElementById('spinewrap').style.display='none';
   document.getElementById('chl').innerHTML=skRows(7);
   document.getElementById('cht').textContent='Chapters';
@@ -1447,6 +1628,32 @@ async function showDetail(id){
   curChapters=await prov.chapters(rawOf(id)).catch(()=>[]);
   document.getElementById('cht').textContent=`${curChapters.length} chapter${curChapters.length===1?'':'s'}`;
   renderChapters();renderSpine();renderDetailButtons();
+  loadRelated(prov,d);
+}
+const REL_LABEL={sequel:'Sequel',prequel:'Prequel',spin_off:'Spin-off',side_story:'Side story',
+  main_story:'Main story',alternate_story:'Alternate story',alternate_version:'Alternate version',
+  doujinshi:'Doujinshi',same_franchise:'Same franchise',shared_universe:'Shared universe',
+  colored:'Coloured',adapted_from:'Adapted from',based_on:'Based on',preserialization:'Pre-serialisation',
+  serialization:'Serialisation'};
+async function loadRelated(prov,d){
+  const el=document.getElementById('related');
+  if(!d.related?.length||!prov.relatedTitles){el.innerHTML='';return;}
+  const rel=await prov.relatedTitles(d.related).catch(()=>[]);
+  const clean=dedup(rel);
+  if(!clean.length){el.innerHTML='';return;}
+  el.innerHTML=`<div class="rule"></div>
+    <div class="sech"><h2 class="sect"><span class="eyebrow">Connected</span>Related titles</h2></div>
+    <div class="grid dense">${clean.map(r=>`
+      <div class="card" onclick="showDetail('${esc(r.id)}')" title="${esc(r.title)}">
+        <div class="card-img">
+          <span class="card-ph">📖</span>
+          ${r.cover?`<img src="${esc(r.cover)}" alt="" loading="lazy" onload="this.classList.add('vis')" onerror="this.remove()">`:''}
+        </div>
+        <div>
+          <div class="card-title">${esc(r.title)}</div>
+          <div class="card-sub">${esc(REL_LABEL[r.how]||r.how||'')}</div>
+        </div>
+      </div>`).join('')}</div>`;
 }
 function renderDetailButtons(){
   if(!curManga)return;
@@ -1531,9 +1738,25 @@ function setFit(f){RS.fit=f;saveRS();applyRS();}
 function setDir(d){RS.dir=d;saveRS();applyRS();toast(d==='rtl'?'Reading right to left':'Reading left to right');}
 function toggleSpread(){RS.spread=!RS.spread;saveRS();applyRS();if(RS.mode==='page')showPage(curPg);}
 
-async function openCh(i){
-  const ch=curChapters[i];if(!ch)return;
-  curChIdx=i;showReader();applyRS();
+function openCh(i){
+  const ch=curChapters[i];
+  if(!ch||!curManga)return;
+  go('#/read/'+curManga.id+'/'+ch.rawId);
+}
+async function renderReaderRoute(mangaId,chId){
+  const prov=providerFor(mangaId);
+  if(!prov){toast('Unrecognised source','err');return renderTab('home');}
+  showReader();applyRS();
+  document.getElementById('rttl').textContent='Loading';
+  document.getElementById('rl').style.display='block';
+  if(!curManga||curManga.id!==mangaId){
+    const d=await prov.detail(rawOf(mangaId)).catch(()=>null);
+    if(d){curManga=d;curChapters=await prov.chapters(rawOf(mangaId)).catch(()=>[]);}
+  }
+  const i=curChapters.findIndex(c=>c.rawId===chId);
+  curChIdx=i>=0?i:0;
+  const ch=curChapters[curChIdx]||{id:mangaId,src:mangaId.split(':')[0],rawId:chId,num:''};
+  document.title=(curManga?.title||'Inkflow')+(ch.num?' · Ch. '+ch.num:'');
   document.getElementById('rttl').textContent=curManga?.title||'';
   document.getElementById('rci').textContent=ch.num?'Ch. '+ch.num:'Oneshot';
   navButtons();
@@ -1649,27 +1872,8 @@ function navCh(d){
   if(n<0||n>=curChapters.length)return;
   window.scrollTo(0,0);openCh(n);
 }
-async function openUpdate(src,rawM,rawC){
-  rawM=decodeURIComponent(rawM);rawC=decodeURIComponent(rawC);
-  showReader();
-  document.getElementById('rttl').textContent='Loading';
-  document.getElementById('rl').style.display='block';
-  const prov=PROVIDERS.get(src);
-  if(!prov){document.getElementById('rl').style.display='none';toast('Unrecognised source','err');return;}
-  const full=src+':'+rawM;
-  if(!curManga||curManga.id!==full){
-    const d=await prov.detail(rawM).catch(()=>null);
-    if(d){curManga=d;curChapters=await prov.chapters(rawM).catch(()=>[]);}
-  }
-  const i=curChapters.findIndex(c=>c.rawId===rawC);
-  curChIdx=i>=0?i:0;
-  const ch=curChapters[curChIdx]||{id:full,src,rawId:rawC,num:''};
-  applyRS();
-  document.getElementById('rttl').textContent=curManga?.title||'';
-  document.getElementById('rci').textContent=ch.num?'Ch. '+ch.num:'';
-  navButtons();
-  if(curManga)recordRead(curManga.id,curManga.title,curManga.cover,ch.num,ch.rawId);
-  await loadPages(ch);
+function openUpdate(src,rawM,rawC){
+  go('#/read/'+src+':'+decodeURIComponent(rawM)+'/'+decodeURIComponent(rawC));
 }
 
 /* ══════════════════════════════════════════════════
@@ -1683,24 +1887,22 @@ function current(){
 function hideAll(){['hp','bp','up','lp','dp','rp'].forEach(id=>document.getElementById(id).style.display='none');}
 function showReader(){hideAll();document.body.classList.add('reading');document.getElementById('rp').style.display='block';window.scrollTo(0,0);}
 function closeReader(){
-  hideAll();document.body.classList.remove('reading');
-  document.getElementById('dp').style.display='block';
-  renderChapters();renderSpine();renderDetailButtons();
+  if(curManga)go('#/title/'+curManga.id);
+  else history.back();
 }
-function goBack(){
-  hideAll();document.body.classList.remove('reading');
-  const map={browse:'bp',updates:'up',library:'lp'};
-  document.getElementById(map[prevPage]||'hp').style.display='block';
-  syncNav(prevPage);
-}
+function goBack(){history.length>1?history.back():go('#/home');}
 function syncNav(tab){
   document.querySelectorAll('.botnav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
-  const order=['home','browse','library','updates'];
-  document.querySelectorAll('.nt').forEach((t,i)=>t.classList.toggle('on',order[i]===tab));
+  document.querySelectorAll('.nt').forEach((t,i)=>t.classList.toggle('on',TABS[i]===tab));
 }
-function switchTab(tab,el){
+/* thin wrappers: every navigation goes through the URL */
+function switchTab(tab){go('#/'+tab);}
+function showDetail(id){go('#/title/'+id);}
+
+function renderTab(tab){
   hideAll();document.body.classList.remove('reading');
-  if(tab==='home'){document.getElementById('hp').style.display='block';}
+  prevPage=tab;
+  if(tab==='home')document.getElementById('hp').style.display='block';
   else if(tab==='browse'){
     document.getElementById('bp').style.display='block';
     if(!document.getElementById('bg').querySelector('.card'))loadBrowse();
@@ -1708,7 +1910,7 @@ function switchTab(tab,el){
   }
   else if(tab==='updates'){document.getElementById('up').style.display='block';loadUpdates();}
   else if(tab==='library'){document.getElementById('lp').style.display='block';renderLibrary();}
-  syncNav(tab);
+  syncNav(tab);document.title='Inkflow';
   window.scrollTo(0,0);
 }
 
@@ -1741,16 +1943,32 @@ document.addEventListener('keydown',e=>{
    INIT
 ══════════════════════════════════════════════════ */
 (function init(){
+  /* inline manifest + icon so the app stays a single file but still
+     installs to a phone home screen */
+  try{
+    const icon='data:image/svg+xml;base64,'+btoa(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="512" height="512" fill="#07070c"/><text x="50%" y="50%" dy=".34em" text-anchor="middle" font-family="sans-serif" font-size="300" font-weight="800" fill="#00ff88">I</text></svg>`);
+    const mf={name:'Inkflow',short_name:'Inkflow',start_url:location.pathname+'#/home',
+      display:'standalone',background_color:'#07070c',theme_color:'#07070c',
+      icons:[{src:icon,sizes:'512x512',type:'image/svg+xml',purpose:'any'}]};
+    const link=document.createElement('link');
+    link.rel='manifest';
+    link.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/manifest+json'}));
+    document.head.appendChild(link);
+    const fav=document.createElement('link');
+    fav.rel='icon';fav.href=icon;document.head.appendChild(fav);
+  }catch{}
+
   try{
     const s=JSON.parse(localStorage.getItem('inkflow_sources')||'{}');
     PROVIDERS.forEach(p=>{if(p.available&&typeof s[p.id]==='boolean')p.enabled=s[p.id];});
   }catch{}
-  renderGenres();applyRS();checkProxy();
+  renderGenres();applyRS();
   if(matureOn){
     const b=document.getElementById('maturebtn');
     b.classList.add('on');b.textContent='Mature included';
   }
-  document.getElementById('hp').style.display='block';
+  handleRoute();
   loadHome();
 })();
 </script>

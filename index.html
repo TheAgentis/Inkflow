@@ -738,8 +738,8 @@ body.reading .botnav{display:none!important}
   <div id="sr" class="fit-w"></div>
   <div id="pr">
     <div class="pw" id="pw">
-      <img class="pimg" id="pi-a" alt="">
-      <img class="pimg" id="pi-b" alt="" style="display:none">
+      <img class="pimg" id="pi-a" alt="" onerror="imgFail(this)">
+      <img class="pimg" id="pi-b" alt="" style="display:none" onerror="imgFail(this)">
       <div class="pnav l" onclick="pageStep(-1)"><span>‹</span></div>
       <div class="pnav r" onclick="pageStep(1)"><span>›</span></div>
     </div>
@@ -879,6 +879,30 @@ function onRouteFound(){document.getElementById('pwarn').classList.remove('show'
 
 /* images bypass CORS entirely */
 function imgSrc(u){return u||'';}
+
+/* ══════════════════════════════════════════════════
+   IMAGE FALLBACK
+   Direct image loads can fail where an API call doesn't —
+   a mobile network intercepting the CDN, a private-relay
+   exit, an ad blocker. The old handler deleted the element
+   on first failure, so nothing ever recovered. Retry once
+   through the proxy, then give up to the placeholder.
+══════════════════════════════════════════════════ */
+function imgFail(el){
+  if(el.dataset.tried==='1'||!PROXY_BASE){el.dataset.dead='1';el.style.display='none';return;}
+  el.dataset.tried='1';
+  el.src=proxyURL(el.dataset.src||el.src);
+}
+function imgOk(el){el.classList.add('vis');}
+/* an <img> inserted via innerHTML that is already in cache can finish
+   loading before the inline onload is live, leaving it stuck at opacity 0 */
+function sweepImages(root){
+  (root||document).querySelectorAll('img[data-src]:not(.vis)').forEach(el=>{
+    if(el.complete&&el.naturalWidth>0)el.classList.add('vis');
+    else if(el.complete&&!el.dataset.tried)imgFail(el);
+  });
+}
+setInterval(()=>sweepImages(),1200);
 
 function saveProxy(){
   let v=document.getElementById('proxy-input').value.trim().replace(/\/$/,'');
@@ -1220,6 +1244,18 @@ registerProvider({
     });
   },
 
+  /* Licensed titles list English chapters that are all externalUrl
+     links to an official reader. Nothing at the manga level marks
+     this — only the feed shows it. */
+  async hasReadable(raw){
+    return cached('ok:'+raw,TTL.chapters,async()=>{
+      const d=await apiFetch(`${MDEX}/manga/${raw}/feed?limit=20&translatedLanguage[]=en&order[chapter]=asc&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica`).catch(()=>null);
+      if(!d)return true;                       /* request failed — never hide on uncertainty */
+      if(!d.data?.length)return false;
+      return d.data.some(c=>!c.attributes?.externalUrl);
+    });
+  },
+
   async pages(raw){
     const d=await apiFetch(`${MDEX}/at-home/server/${raw}`).catch(()=>null);
     if(!d?.chapter)return[];
@@ -1281,10 +1317,10 @@ function skRows(n=8){
 }
 function card(it){
   const[kind]=kindOf(it.lang);
-  return`<div class="card" onclick="showDetail('${esc(it.id)}')" title="${esc(it.title)}">
+  return`<div class="card" data-vid="${esc(it.id)}" onclick="showDetail('${esc(it.id)}')" title="${esc(it.title)}">
     <div class="card-img">
       <span class="card-ph">📖</span>
-      ${it.cover?`<img src="${esc(it.cover)}" alt="" loading="lazy" onload="this.classList.add('vis')" onerror="this.remove()">`:''}
+      ${it.cover?`<img src="${esc(it.cover)}" alt="" loading="lazy" data-src="${esc(it.cover)}" onload="imgOk(this)" onerror="imgFail(this)">`:''}
       ${isSaved(it.id)?'<div class="card-mark"><span class="badge b-new">SAVED</span></div>':''}
       ${it.rating&&it.rating!=='safe'&&it.rating!=='suggestive'?'<div class="card-mark" style="left:6px;right:auto"><span class="badge b-18">18+</span></div>':''}
     </div>
@@ -1297,7 +1333,7 @@ function card(it){
 function updRow(u){
   const n=u.chNum?`Ch. ${u.chNum}`:'Oneshot';
   return`<div class="row" onclick="openUpdate('${esc(u.src)}','${encodeURIComponent(u.rawMangaId||'')}','${encodeURIComponent(u.rawChId||'')}')">
-    <div class="row-th">${u.cover?`<img src="${esc(u.cover)}" loading="lazy" onload="this.classList.add('vis')" onerror="this.remove()">`:'📖'}</div>
+    <div class="row-th">${u.cover?`<img src="${esc(u.cover)}" loading="lazy" data-src="${esc(u.cover)}" onload="imgOk(this)" onerror="imgFail(this)">`:'📖'}</div>
     <div class="row-body">
       <div class="row-title">${esc(u.title)}</div>
       <div class="row-sub">${esc(n)}${u.chTitle?' · '+esc(u.chTitle):''}</div>
@@ -1307,8 +1343,58 @@ function updRow(u){
 }
 
 /* ══════════════════════════════════════════════════
-   HOME
+   LAZY VERIFICATION
+   Per-title, so it only runs for cards you actually
+   scroll to, capped at four in flight. Results feed the
+   same remembered-empty list, so a title verified once
+   stays filtered without re-checking.
 ══════════════════════════════════════════════════ */
+const vSeen=new Set();
+let vQueue=[],vActive=0;
+const V_MAX=4;
+
+function queueVerify(el){
+  const id=el.dataset.vid;
+  if(!id||vSeen.has(id))return;
+  if(isSaved(id))return;               /* never hide something you saved */
+  vSeen.add(id);
+  vQueue.push({id,el});
+  pumpVerify();
+}
+function pumpVerify(){
+  while(vActive<V_MAX&&vQueue.length){
+    const job=vQueue.shift();
+    vActive++;
+    verifyOne(job).finally(()=>{vActive--;pumpVerify();});
+  }
+}
+async function verifyOne({id,el}){
+  const prov=providerFor(id);
+  if(!prov?.hasReadable)return;
+  const ok=await prov.hasReadable(rawOf(id)).catch(()=>true);
+  if(ok){unmarkEmpty(id);return;}
+  markEmpty(id);
+  if(el.isConnected){
+    el.style.transition='opacity .25s';
+    el.style.opacity='0';
+    setTimeout(()=>el.remove(),260);
+  }
+}
+let vObserver=null;
+function observeCards(root){
+  if(!vObserver){
+    vObserver=new IntersectionObserver(es=>{
+      es.forEach(e=>{
+        if(!e.isIntersecting)return;
+        vObserver.unobserve(e.target);
+        queueVerify(e.target);
+      });
+    },{rootMargin:'200px'});
+  }
+  (root||document).querySelectorAll('.card[data-vid]').forEach(c=>{
+    if(!c.dataset.observed){c.dataset.observed='1';vObserver.observe(c);}
+  });
+}
 async function loadHome(){
   renderSrcBar();
   loadFeatured();loadHomeUpdates();checkLibraryUpdates();
@@ -1333,7 +1419,16 @@ async function loadFeatured(){
     return;
   }
   g.innerHTML=items.map(card).join('');
-  heroItems=items.filter(i=>i.cover).slice(0,6);
+  observeCards(g);sweepImages(g);
+  /* the hero is the most visible slot, so verify its candidates up
+     front rather than waiting for them to scroll into view */
+  const pool=items.filter(i=>i.cover).slice(0,14);
+  const checks=await Promise.allSettled(pool.map(async i=>{
+    const p=providerFor(i.id);
+    return p?.hasReadable?await p.hasReadable(i.rawId):true;
+  }));
+  heroItems=pool.filter((_,n)=>checks[n].status!=='fulfilled'||checks[n].value).slice(0,6);
+  if(!heroItems.length)heroItems=pool.slice(0,6);
   if(heroItems.length){setHero(0);startHero();}
 }
 async function loadHomeUpdates(){
@@ -1419,7 +1514,7 @@ function renderLibShelf(rows){
     <button class="sa" onclick="checkLibraryUpdates(true)">Check again</button></div>
     <div class="rows" style="margin-bottom:34px">${live.map(r=>`
       <div class="row" onclick="openUpdate('${esc(String(r.mangaId).split(':')[0])}','${encodeURIComponent(rawOf(r.mangaId))}','${encodeURIComponent(r.latest.rawId)}')">
-        <div class="row-th">${r.mangaCover?`<img src="${esc(r.mangaCover)}" loading="lazy" onload="this.classList.add('vis')" onerror="this.remove()">`:'📖'}</div>
+        <div class="row-th">${r.mangaCover?`<img src="${esc(r.mangaCover)}" loading="lazy" data-src="${esc(r.mangaCover)}" onload="imgOk(this)" onerror="imgFail(this)">`:'📖'}</div>
         <div class="row-body">
           <div class="row-title">${esc(r.mangaTitle||'Untitled')}</div>
           <div class="row-sub">${r.unread} unread · latest Ch. ${esc(r.latest.num||'?')}</div>
@@ -1439,6 +1534,7 @@ function renderLibrary(){
     el.innerHTML=list.length
       ?`<div class="grid${denseGrid?' dense':''}">${list.map(s=>card({id:s.id,title:s.title,cover:s.cover,lang:s.lang,status:''})).join('')}</div>`
       :emptyBlock('Nothing saved yet','Open any title and press Save to keep it here. Inkflow checks saved titles for new chapters every ten minutes.');
+    sweepImages(el);
     return;
   }
   const h=history_();
@@ -1446,7 +1542,7 @@ function renderLibrary(){
     ?`<div class="sech" style="margin-bottom:10px"><span class="spine-label">${h.length} entries</span><button class="sa" onclick="clearHistory()">Clear history</button></div>
       <div class="rows">${h.map(x=>`
       <div class="row" onclick="openUpdate('${esc(String(x.mangaId).split(':')[0])}','${encodeURIComponent(rawOf(x.mangaId))}','${esc(x.chId)}')">
-        <div class="row-th">${x.mangaCover?`<img src="${esc(x.mangaCover)}" loading="lazy" onload="this.classList.add('vis')" onerror="this.remove()">`:'📖'}</div>
+        <div class="row-th">${x.mangaCover?`<img src="${esc(x.mangaCover)}" loading="lazy" data-src="${esc(x.mangaCover)}" onload="imgOk(this)" onerror="imgFail(this)">`:'📖'}</div>
         <div class="row-body">
           <div class="row-title">${esc(x.mangaTitle||'Untitled')}</div>
           <div class="row-sub mut">Ch. ${esc(x.chNum||'?')}</div>
@@ -1454,6 +1550,7 @@ function renderLibrary(){
         <div class="row-end">${rt(x.time)}</div>
       </div>`).join('')}</div>`
     :emptyBlock('No reading history','Chapters you open show up here so you can pick up where you left off.');
+  sweepImages(el);
 }
 function clearHistory(){
   if(!confirm('Clear all reading history? Saved titles stay.'))return;
@@ -1583,6 +1680,7 @@ async function loadBrowse(more=false){
     return loadBrowse(true);
   }
   g.insertAdjacentHTML('beforeend',items.map(card).join(''));
+  observeCards(g);sweepImages(g);
   bLoading=false;
   document.getElementById('bsentinel').textContent='';
 }
@@ -1642,7 +1740,7 @@ async function doSearch(q){
   drop.innerHTML=res.map(m=>{
     const[kind]=kindOf(m.lang);
     return`<div class="di" onclick="pickSearch('${esc(m.id)}')">
-      ${m.cover?`<img class="dth" src="${esc(m.cover)}" loading="lazy" onerror="this.remove()">`:'<div class="dth"></div>'}
+      ${m.cover?`<img class="dth" src="${esc(m.cover)}" loading="lazy" onerror="imgFail(this)">`:'<div class="dth"></div>'}
       <div class="din"><p>${esc(m.title)}</p><small>${kind}${m.status?' · '+esc(m.status):''}</small></div>
     </div>`;}).join('');
 }
@@ -1719,13 +1817,14 @@ async function loadRelated(prov,d){
       <div class="card" onclick="showDetail('${esc(r.id)}')" title="${esc(r.title)}">
         <div class="card-img">
           <span class="card-ph">📖</span>
-          ${r.cover?`<img src="${esc(r.cover)}" alt="" loading="lazy" onload="this.classList.add('vis')" onerror="this.remove()">`:''}
+          ${r.cover?`<img src="${esc(r.cover)}" alt="" loading="lazy" data-src="${esc(r.cover)}" onload="imgOk(this)" onerror="imgFail(this)">`:''}
         </div>
         <div>
           <div class="card-title">${esc(r.title)}</div>
           <div class="card-sub">${esc(REL_LABEL[r.how]||r.how||'')}</div>
         </div>
       </div>`).join('')}</div>`;
+  sweepImages(el);
 }
 function renderDetailButtons(){
   if(!curManga)return;
@@ -1869,7 +1968,8 @@ function renderReader(){
   const sr=document.getElementById('sr'),pr=document.getElementById('pr');
   if(RS.mode==='scroll'){
     sr.style.display='flex';pr.style.display='none';
-    sr.innerHTML=pages.map((p,i)=>`<img class="spage" src="${esc(p)}" alt="Page ${i+1}" loading="lazy" onload="this.classList.add('vis')">`).join('');
+    sr.innerHTML=pages.map((p,i)=>`<img class="spage" src="${esc(p)}" alt="Page ${i+1}" loading="lazy" data-src="${esc(p)}" onload="imgOk(this)" onerror="imgFail(this)">`).join('');
+    sweepImages(sr);
     if(curPg>0)setTimeout(()=>{const t=sr.children[curPg];if(t)t.scrollIntoView();},120);
   }else{
     sr.style.display='none';pr.style.display='flex';
@@ -1882,10 +1982,15 @@ function showPage(n){
   const a=document.getElementById('pi-a'),b=document.getElementById('pi-b');
   /* a spread on a phone gives you two unreadable half-pages */
   const two=RS.spread&&window.innerWidth>700&&pages.length>2&&curPg>0;
-  a.classList.remove('vis');a.onload=()=>a.classList.add('vis');a.src=pages[curPg];
-  if(two&&pages[curPg+1]){
-    b.style.display='';b.classList.remove('vis');b.onload=()=>b.classList.add('vis');b.src=pages[curPg+1];
-  }else b.style.display='none';
+  /* clear the retry flag on each swap or a single failure would
+     poison every later page in the chapter */
+  const put=(el,url)=>{
+    el.classList.remove('vis');el.dataset.tried='';el.dataset.src=url;
+    el.style.display='';el.onload=()=>el.classList.add('vis');el.src=url;
+  };
+  put(a,pages[curPg]);
+  if(two&&pages[curPg+1])put(b,pages[curPg+1]);
+  else b.style.display='none';
   document.getElementById('pc').textContent=`${curPg+1}${two&&pages[curPg+1]?'–'+(curPg+2):''} / ${pages.length}`;
   updateProgress();preload(curPg);
   if(window._ch)savePos(window._ch.rawId,curPg);

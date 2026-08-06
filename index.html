@@ -884,25 +884,37 @@ function imgSrc(u){return u||'';}
    IMAGE FALLBACK
    Direct image loads can fail where an API call doesn't —
    a mobile network intercepting the CDN, a private-relay
-   exit, an ad blocker. The old handler deleted the element
-   on first failure, so nothing ever recovered. Retry once
-   through the proxy, then give up to the placeholder.
+   exit, a content blocker. Retry once through the proxy
+   if one exists, then leave the placeholder showing.
+
+   Nothing here ever hides an element. The <img> sits at
+   opacity 0 until it loads, with the card placeholder
+   behind it, so a failure is already invisible.
 ══════════════════════════════════════════════════ */
 function imgFail(el){
-  if(el.dataset.tried==='1'||!PROXY_BASE){el.dataset.dead='1';el.style.display='none';return;}
-  el.dataset.tried='1';
-  el.src=proxyURL(el.dataset.src||el.src);
+  const orig=el.dataset.src||'';
+  if(el.dataset.tried!=='1'&&PROXY_BASE&&orig){
+    el.dataset.tried='1';
+    el.src=proxyURL(orig);
+    return;
+  }
+  el.dataset.dead='1';
 }
 function imgOk(el){el.classList.add('vis');}
-/* an <img> inserted via innerHTML that is already in cache can finish
-   loading before the inline onload is live, leaving it stuck at opacity 0 */
+
+/* An <img> inserted via innerHTML that is already cached can finish
+   loading before its inline onload is live, leaving it stuck at
+   opacity 0. This promotes those — and only those.
+
+   It must never call imgFail: a lazy image that has not entered the
+   viewport yet has not started fetching, and can report complete
+   with naturalWidth 0. That is not a failure, it is a deferral. */
 function sweepImages(root){
-  (root||document).querySelectorAll('img[data-src]:not(.vis)').forEach(el=>{
+  (root||document).querySelectorAll('img:not(.vis)').forEach(el=>{
     if(el.complete&&el.naturalWidth>0)el.classList.add('vis');
-    else if(el.complete&&!el.dataset.tried)imgFail(el);
   });
 }
-setInterval(()=>sweepImages(),1200);
+setInterval(()=>sweepImages(),1500);
 
 function saveProxy(){
   let v=document.getElementById('proxy-input').value.trim().replace(/\/$/,'');

@@ -225,6 +225,7 @@ main{max-width:1500px;margin:0 auto;padding:24px 20px 60px}
 .b-zh{background:rgba(240,164,41,.13);color:var(--amber);border:1px solid rgba(240,164,41,.3)}
 .b-mut{background:var(--panel-3);color:var(--paper-3);border:1px solid var(--gutter)}
 .b-new{background:var(--signal);color:var(--ink);border:1px solid var(--signal);font-weight:700}
+.b-18{background:rgba(224,97,108,.9);color:#fff;border:1px solid var(--rose);font-weight:700}
 
 /* ══════════════════════════════════════════════════
    GRID — deliberate gutters
@@ -354,12 +355,12 @@ main{max-width:1500px;margin:0 auto;padding:24px 20px 60px}
 .spage{width:100%;display:block;background:var(--panel-2);border-radius:3px;opacity:0;transition:opacity .35s;min-height:70px}
 .spage.vis{opacity:1}
 .fit-w .spage{max-width:860px}
-.fit-h .spage{max-width:none;width:auto;max-height:calc(100vh - 62px)}
+.fit-h .spage{max-width:none;width:auto;max-height:calc(100dvh - 62px)}
 .fit-n .spage{max-width:1400px}
-#pr{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 50px);padding:10px}
+#pr{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100dvh - 50px);padding:10px}
 .pw{position:relative;display:flex;gap:3px;justify-content:center;max-width:100%}
 .pw.rtl{flex-direction:row-reverse}
-.pimg{max-width:100%;max-height:calc(100vh - 130px);display:block;background:var(--panel-2);border-radius:3px;opacity:0;transition:opacity .3s}
+.pimg{max-width:100%;max-height:calc(100dvh - 130px);display:block;background:var(--panel-2);border-radius:3px;opacity:0;transition:opacity .3s}
 .pimg.vis{opacity:1}
 .pnav{position:absolute;top:0;bottom:0;width:38%;display:grid;place-items:center;cursor:pointer;opacity:0;transition:opacity .18s;z-index:3}
 .pnav:hover{opacity:1}
@@ -443,8 +444,98 @@ main{max-width:1500px;margin:0 auto;padding:24px 20px 60px}
   padding:10px 18px;background:rgba(240,164,41,.08);border:1px solid rgba(240,164,41,.28);
   border-radius:var(--r-sm);font-size:var(--s--1);color:var(--amber);
 }
-.warn.show{display:flex}
-.warn button{color:var(--amber);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+/* ══════════════════════════════════════════════════
+   MOBILE
+   Below 700px the top bar can't hold nav, so navigation
+   moves to a thumb-reachable bottom bar and the reader
+   toolbar collapses into a settings sheet.
+══════════════════════════════════════════════════ */
+.botnav{display:none}
+body.reading .botnav{display:none!important}
+
+@media(max-width:700px){
+  :root{--bar-h:54px}
+  body{padding-bottom:calc(60px + env(safe-area-inset-bottom))}
+  body.reading{padding-bottom:env(safe-area-inset-bottom)}
+
+  .bar{padding:0 12px;gap:9px}
+  .ntabs{display:none}
+  .logo::after{display:none}
+  .skbd{display:none}
+  #si{height:42px;font-size:var(--s-0)}
+  #sd{max-height:58dvh}
+  .iconbtn{width:42px;height:42px;font-size:16px}
+
+  main{padding:18px 14px 40px}
+  .sect{font-size:var(--s-1)}
+
+  .grid{grid-template-columns:repeat(auto-fill,minmax(102px,1fr));gap:15px 10px}
+  .grid.dense{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}
+  .card-title{font-size:var(--s--2);-webkit-line-clamp:2}
+
+  .hero{padding:20px 14px 22px;gap:18px}
+  .hero-title{font-size:var(--s-2);max-width:none}
+  .hero-desc{-webkit-line-clamp:2;margin-bottom:16px}
+  .hero-cover-wrap{max-width:118px}
+
+  .dh{grid-template-columns:104px minmax(0,1fr);gap:14px;margin-bottom:22px}
+  .dtt{font-size:var(--s-1)}
+  .dd{max-height:120px}
+
+  /* thumb-sized controls — 44px floor */
+  .btn{padding:11px 16px}
+  .btn.sm{padding:9px 13px;font-size:var(--s--1)}
+  .chip{padding:10px 15px}
+  .tab{padding:12px 13px}
+  .sel{height:40px;font-size:var(--s--1)}
+  .cr{padding:12px 11px}
+  .row{padding:11px}
+  .cn{min-width:64px}
+  .chh{gap:8px}
+  #chfind{flex:1;min-width:0;height:38px}
+
+  /* ticks stay tappable; the strip scrolls instead of shrinking */
+  .spine{overflow-x:auto;scrollbar-width:none}
+  .spine::-webkit-scrollbar{display:none}
+  .spine i{min-width:4px;flex:1 0 4px}
+  .spine i:hover{transform:none}
+
+  .rtb{gap:7px;padding:0 10px}
+  .rtb .seg,.rtb #spreadbtn{display:none!important}
+  .rtb #pb,.rtb #nb{display:none}
+  .rbb{padding:14px 16px calc(16px + env(safe-area-inset-bottom))}
+  .rbb-t{font-size:var(--s--2)}
+  .pnav{opacity:.001}
+  .pc{margin-bottom:10px}
+
+  #toasts{left:14px;right:14px;bottom:calc(70px + env(safe-area-inset-bottom))}
+  body.reading #toasts{bottom:calc(16px + env(safe-area-inset-bottom))}
+  .toast{max-width:none}
+  .modal{padding:20px 14px}
+  .modal-box{padding:20px}
+
+  .botnav{
+    display:grid;grid-template-columns:repeat(4,1fr);position:fixed;
+    left:0;right:0;bottom:0;z-index:110;
+    height:calc(60px + env(safe-area-inset-bottom));
+    padding-bottom:env(safe-area-inset-bottom);
+    background:color-mix(in srgb,var(--ink) 94%,transparent);
+    border-top:1px solid var(--gutter);backdrop-filter:blur(16px) saturate(1.4);
+  }
+  .botnav button{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+    font-family:var(--f-mono);font-size:9.5px;letter-spacing:.06em;color:var(--paper-3);
+    transition:color .15s;
+  }
+  .botnav button i{font-style:normal;font-size:17px;line-height:1}
+  .botnav button.on{color:var(--signal)}
+}
+
+@media(max-width:400px){
+  .grid{grid-template-columns:repeat(3,1fr)}
+  .hero-cover-wrap{max-width:96px}
+  .dh{grid-template-columns:88px minmax(0,1fr)}
+}
 </style>
 </head>
 <body>
@@ -552,6 +643,7 @@ main{max-width:1500px;margin:0 auto;padding:24px 20px 60px}
       <option value="zh">Manhua</option>
     </select>
     <button class="btn sm" onclick="toggleDense()" id="densebtn">Compact grid</button>
+    <button class="btn sm" onclick="toggleMature()" id="maturebtn">Include mature</button>
   </div>
   <div class="chiprow" id="gbar"></div>
   <div id="bg" class="grid"></div>
@@ -628,6 +720,7 @@ main{max-width:1500px;margin:0 auto;padding:24px 20px 60px}
       <button id="dir-rtl" onclick="setDir('rtl')" title="Right to left, the way manga is drawn">R→L</button>
     </div>
     <button class="btn sm" id="spreadbtn" onclick="toggleSpread()" title="Two-page spread">⧉</button>
+    <button class="btn sm" id="rsettings" onclick="openModal('read')" title="Reading settings" style="display:none">⚙</button>
     <button class="btn sm" id="pb" onclick="navCh(-1)">Prev</button>
     <button class="btn sm" id="nb" onclick="navCh(1)">Next</button>
   </div>
@@ -684,6 +777,44 @@ main{max-width:1500px;margin:0 auto;padding:24px 20px 60px}
   <div style="margin-top:18px"><button class="btn" onclick="closeModal()">Close</button></div>
 </div></div>
 
+<div class="modal" id="m-read"><div class="modal-box">
+  <h2>Reading settings</h2>
+  <p>These stick between sessions and apply to every title.</p>
+  <div style="display:flex;flex-direction:column;gap:16px">
+    <div>
+      <div class="spine-label" style="margin-bottom:7px">View</div>
+      <div class="seg" style="width:100%">
+        <button style="flex:1" id="sh-scroll" onclick="setMode('scroll')">Continuous scroll</button>
+        <button style="flex:1" id="sh-page" onclick="setMode('page')">One page at a time</button>
+      </div>
+    </div>
+    <div id="sh-fitwrap">
+      <div class="spine-label" style="margin-bottom:7px">Image size</div>
+      <div class="seg" style="width:100%">
+        <button style="flex:1" id="sh-w" onclick="setFit('w')">Fit width</button>
+        <button style="flex:1" id="sh-h" onclick="setFit('h')">Fit height</button>
+        <button style="flex:1" id="sh-n" onclick="setFit('n')">Original</button>
+      </div>
+    </div>
+    <div id="sh-dirwrap">
+      <div class="spine-label" style="margin-bottom:7px">Reading direction</div>
+      <div class="seg" style="width:100%">
+        <button style="flex:1" id="sh-ltr" onclick="setDir('ltr')">Left to right</button>
+        <button style="flex:1" id="sh-rtl" onclick="setDir('rtl')">Right to left</button>
+      </div>
+      <p style="font-size:11.5px;color:var(--paper-3);margin:7px 0 0">Manga is drawn right to left. Swipes and arrows follow whichever you pick.</p>
+    </div>
+  </div>
+  <div style="margin-top:20px"><button class="btn p" style="width:100%;justify-content:center" onclick="closeModal()">Done</button></div>
+</div></div>
+
+<nav class="botnav" id="botnav">
+  <button class="on" data-tab="home" onclick="switchTab('home')"><i>▤</i>Home</button>
+  <button data-tab="browse" onclick="switchTab('browse')"><i>⌗</i>Browse</button>
+  <button data-tab="library" onclick="switchTab('library')"><i>❏</i>Library</button>
+  <button data-tab="updates" onclick="switchTab('updates')"><i>⟳</i>Updates</button>
+</nav>
+
 <div id="toasts"></div>
 
 <script>
@@ -717,6 +848,7 @@ let pages=[],curPg=0;
 let prevPage='home',hMode='popular',lMode='saved';
 let bOff=0,bGenreId='',typeFilter='';
 let sortAsc=false,tagMap={},denseGrid=false;
+let matureOn=!!localStorage.getItem('inkflow_mature');
 let refreshTimer=null,libTimer=null,searchTimer=null,heroTimer=null;
 let heroItems=[],heroIdx=0;
 let bLoading=false,bDone=false,bObserver=null;
@@ -840,7 +972,7 @@ function mdTit(m){const t=m.attributes?.title||{};return t.en||t['ja-ro']||t.ja|
 function mdCard(m){
   return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),
     lang:m.attributes?.originalLanguage,status:m.attributes?.status||'',
-    year:m.attributes?.year||''};
+    year:m.attributes?.year||'',rating:m.attributes?.contentRating||''};
 }
 
 registerProvider({
@@ -859,8 +991,11 @@ registerProvider({
     return(d?.data||[]).map(mdCard);
   },
 
-  async browse({offset,tagId,lang,sort,status,demo}){
+  async browse({offset,tagId,lang,sort,status,demo,mature}){
     let u=`${MDEX}/manga?limit=96&offset=${offset}${MD_BASE}${mdLang(lang)}&order[${sort||'followedCount'}]=desc`;
+    /* additive only, and only ever from the Browse tab — Featured,
+       Updates, search and the random button stay safe+suggestive */
+    if(mature)u+='&contentRating[]=erotica';
     if(tagId)u+=`&includedTags[]=${tagId}`;
     if(status)u+=`&status[]=${status}`;
     if(demo)u+=`&publicationDemographic[]=${demo}`;
@@ -978,6 +1113,7 @@ function card(it){
       <span class="card-ph">📖</span>
       ${it.cover?`<img src="${esc(it.cover)}" alt="" loading="lazy" onload="this.classList.add('vis')" onerror="this.remove()">`:''}
       ${isSaved(it.id)?'<div class="card-mark"><span class="badge b-new">SAVED</span></div>':''}
+      ${it.rating&&it.rating!=='safe'&&it.rating!=='suggestive'?'<div class="card-mark" style="left:6px;right:auto"><span class="badge b-18">18+</span></div>':''}
     </div>
     <div>
       <div class="card-title">${esc(it.title)}</div>
@@ -1163,12 +1299,21 @@ async function loadUpdates(){
 ══════════════════════════════════════════════════ */
 function browseOpts(){
   return{
-    offset:bOff,tagId:bGenreId,
+    offset:bOff,tagId:bGenreId,mature:matureOn,
     lang:document.getElementById('f-lang').value,
     sort:document.getElementById('f-sort').value,
     status:document.getElementById('f-status').value,
     demo:document.getElementById('f-demo').value
   };
+}
+function toggleMature(){
+  matureOn=!matureOn;
+  localStorage.setItem('inkflow_mature',matureOn?'1':'');
+  const b=document.getElementById('maturebtn');
+  b.classList.toggle('on',matureOn);
+  b.textContent=matureOn?'Mature included':'Include mature';
+  toast(matureOn?'Mature titles included in Browse only':'Mature titles hidden');
+  loadBrowse();
 }
 async function loadBrowse(more=false){
   const g=document.getElementById('bg');
@@ -1206,7 +1351,7 @@ function initBrowseObserver(){
   },{rootMargin:'600px'});
   bObserver.observe(document.getElementById('bsentinel'));
 }
-const GENRES=['Action','Adventure','Comedy','Drama','Fantasy','Horror','Isekai','Mystery','Romance','Sci-Fi','Slice of Life','Sports','Supernatural','Thriller','Martial Arts','Historical','Psychological','Mecha','Music','Cooking'];
+const GENRES=['Action','Adventure','Comedy','Drama','Ecchi','Fantasy','Harem','Horror','Isekai','Mystery','Romance','Sci-Fi','Slice of Life','Sports','Supernatural','Thriller','Martial Arts','Historical','Psychological','School Life','Mecha','Music','Cooking'];
 function renderGenres(){
   document.getElementById('gbar').innerHTML=
     `<button class="chip on" onclick="gfilt('',this)">All genres</button>`+
@@ -1357,6 +1502,7 @@ function togSort(){
    READER
 ══════════════════════════════════════════════════ */
 function applyRS(){
+  const narrow=window.innerWidth<=700;
   document.getElementById('m-scroll').classList.toggle('on',RS.mode==='scroll');
   document.getElementById('m-page').classList.toggle('on',RS.mode==='page');
   ['w','h','n'].forEach(f=>document.getElementById('fit-'+f).classList.toggle('on',RS.fit===f));
@@ -1365,11 +1511,21 @@ function applyRS(){
   document.getElementById('spreadbtn').classList.toggle('on',RS.spread);
   document.getElementById('fitseg').style.display=RS.mode==='scroll'?'':'none';
   document.getElementById('dirseg').style.display=RS.mode==='page'?'':'none';
-  document.getElementById('spreadbtn').style.display=RS.mode==='page'?'':'none';
+  document.getElementById('spreadbtn').style.display=RS.mode==='page'&&!narrow?'':'none';
+  document.getElementById('rsettings').style.display=narrow?'':'none';
+  /* mirror into the mobile sheet */
+  document.getElementById('sh-scroll').classList.toggle('on',RS.mode==='scroll');
+  document.getElementById('sh-page').classList.toggle('on',RS.mode==='page');
+  ['w','h','n'].forEach(f=>document.getElementById('sh-'+f).classList.toggle('on',RS.fit===f));
+  document.getElementById('sh-ltr').classList.toggle('on',RS.dir==='ltr');
+  document.getElementById('sh-rtl').classList.toggle('on',RS.dir==='rtl');
+  document.getElementById('sh-fitwrap').style.display=RS.mode==='scroll'?'':'none';
+  document.getElementById('sh-dirwrap').style.display=RS.mode==='page'?'':'none';
   const sr=document.getElementById('sr');
   sr.className='fit-'+RS.fit;
   document.getElementById('pw').classList.toggle('rtl',RS.dir==='rtl');
 }
+window.addEventListener('resize',()=>{if(visible('rp'))applyRS();});
 function setMode(m){RS.mode=m;saveRS();applyRS();renderReader();}
 function setFit(f){RS.fit=f;saveRS();applyRS();}
 function setDir(d){RS.dir=d;saveRS();applyRS();toast(d==='rtl'?'Reading right to left':'Reading left to right');}
@@ -1429,7 +1585,8 @@ function preload(i){[i+1,i+2,i+3].forEach(n=>{if(pages[n]){const im=new Image();
 function showPage(n){
   curPg=Math.max(0,Math.min(n,pages.length-1));
   const a=document.getElementById('pi-a'),b=document.getElementById('pi-b');
-  const two=RS.spread&&pages.length>2&&curPg>0;
+  /* a spread on a phone gives you two unreadable half-pages */
+  const two=RS.spread&&window.innerWidth>700&&pages.length>2&&curPg>0;
   a.classList.remove('vis');a.onload=()=>a.classList.add('vis');a.src=pages[curPg];
   if(two&&pages[curPg+1]){
     b.style.display='';b.classList.remove('vis');b.onload=()=>b.classList.add('vis');b.src=pages[curPg+1];
@@ -1441,12 +1598,32 @@ function showPage(n){
 function pageStep(dir){
   /* the arrows are physical positions; RTL flips what they mean */
   const d=RS.dir==='rtl'?-dir:dir;
-  const step=(RS.spread&&curPg>0)?2:1;
+  const step=(RS.spread&&window.innerWidth>700&&curPg>0)?2:1;
   const next=curPg+d*step;
   if(next<0){if(curChIdx>0)navCh(-1);return;}
   if(next>=pages.length){if(curChIdx<curChapters.length-1)navCh(1);return;}
   showPage(next);
 }
+
+/* ── swipe ────────────────────────────────
+   A swipe is a physical gesture, so it feeds pageStep() the same
+   way the on-screen arrows do and inherits the RTL flip. */
+(function swipe(){
+  const pw=document.getElementById('pw');
+  let x0=0,y0=0,t0=0,tracking=false;
+  pw.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return tracking=false;
+    x0=e.touches[0].clientX;y0=e.touches[0].clientY;t0=Date.now();tracking=true;
+  },{passive:true});
+  pw.addEventListener('touchend',e=>{
+    if(!tracking)return;tracking=false;
+    const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;
+    if(Date.now()-t0>700)return;                    /* a slow drag isn't a swipe */
+    if(Math.abs(dx)<44)return;                      /* ignore taps and jitter */
+    if(Math.abs(dx)<Math.abs(dy)*1.3)return;        /* vertical wins, let it scroll */
+    pageStep(dx<0?1:-1);
+  },{passive:true});
+})();
 function updateProgress(){
   const pct=RS.mode==='page'
     ?((curPg+1)/Math.max(pages.length,1))*100
@@ -1504,20 +1681,25 @@ function current(){
   if(visible('up'))return'updates';if(visible('lp'))return'library';return'home';
 }
 function hideAll(){['hp','bp','up','lp','dp','rp'].forEach(id=>document.getElementById(id).style.display='none');}
-function showReader(){hideAll();document.getElementById('rp').style.display='block';window.scrollTo(0,0);}
+function showReader(){hideAll();document.body.classList.add('reading');document.getElementById('rp').style.display='block';window.scrollTo(0,0);}
 function closeReader(){
-  hideAll();document.getElementById('dp').style.display='block';
+  hideAll();document.body.classList.remove('reading');
+  document.getElementById('dp').style.display='block';
   renderChapters();renderSpine();renderDetailButtons();
 }
 function goBack(){
-  hideAll();
+  hideAll();document.body.classList.remove('reading');
   const map={browse:'bp',updates:'up',library:'lp'};
   document.getElementById(map[prevPage]||'hp').style.display='block';
+  syncNav(prevPage);
+}
+function syncNav(tab){
+  document.querySelectorAll('.botnav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===tab));
+  const order=['home','browse','library','updates'];
+  document.querySelectorAll('.nt').forEach((t,i)=>t.classList.toggle('on',order[i]===tab));
 }
 function switchTab(tab,el){
-  document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
-  if(el)el.classList.add('on');
-  hideAll();
+  hideAll();document.body.classList.remove('reading');
   if(tab==='home'){document.getElementById('hp').style.display='block';}
   else if(tab==='browse'){
     document.getElementById('bp').style.display='block';
@@ -1526,6 +1708,7 @@ function switchTab(tab,el){
   }
   else if(tab==='updates'){document.getElementById('up').style.display='block';loadUpdates();}
   else if(tab==='library'){document.getElementById('lp').style.display='block';renderLibrary();}
+  syncNav(tab);
   window.scrollTo(0,0);
 }
 
@@ -1563,6 +1746,10 @@ document.addEventListener('keydown',e=>{
     PROVIDERS.forEach(p=>{if(p.available&&typeof s[p.id]==='boolean')p.enabled=s[p.id];});
   }catch{}
   renderGenres();applyRS();checkProxy();
+  if(matureOn){
+    const b=document.getElementById('maturebtn');
+    b.classList.add('on');b.textContent='Mature included';
+  }
   document.getElementById('hp').style.display='block';
   loadHome();
 })();

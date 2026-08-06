@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#07070c">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -738,8 +739,8 @@ body.reading .botnav{display:none!important}
   <div id="sr" class="fit-w"></div>
   <div id="pr">
     <div class="pw" id="pw">
-      <img class="pimg" id="pi-a" alt="" onerror="imgFail(this)">
-      <img class="pimg" id="pi-b" alt="" style="display:none" onerror="imgFail(this)">
+      <img class="pimg" id="pi-a" alt="" referrerpolicy="no-referrer" onerror="imgFail(this)">
+      <img class="pimg" id="pi-b" alt="" style="display:none" referrerpolicy="no-referrer" onerror="imgFail(this)">
       <div class="pnav l" onclick="pageStep(-1)"><span>‹</span></div>
       <div class="pnav r" onclick="pageStep(1)"><span>›</span></div>
     </div>
@@ -762,7 +763,7 @@ body.reading .botnav{display:none!important}
 <!-- ══ MODALS ══ -->
 <div class="modal" id="m-proxy"><div class="modal-box">
   <h2>Optional: add a proxy</h2>
-  <p>Inkflow talks to the API directly and only needs this when that fails — typically when the page is open from a <code class="mono">file://</code> path, or on a network that blocks the API. Deploy <code class="mono">api/proxy.js</code> to Vercel and paste the URL.</p>
+  <p>Inkflow talks to the API directly and only needs this when that fails. Two cases: the page is open from a <code class="mono">file://</code> path or a network blocks the API, and — more commonly — covers come back as a "you can read this at" placeholder, which means the image host is rejecting the request based on where it came from. A proxy fetches them server-side and both problems go away.</p>
   <input id="proxy-input" class="txt" type="text" placeholder="https://inkflow-proxy.vercel.app">
   <div style="display:flex;gap:8px">
     <button class="btn p" style="flex:1;justify-content:center" onclick="saveProxy()">Save and reload</button>
@@ -877,25 +878,36 @@ async function apiFetch(url){
 }
 function onRouteFound(){document.getElementById('pwarn').classList.remove('show');}
 
-/* images bypass CORS entirely */
+/* Keep raw upstream URLs in the data model. */
 function imgSrc(u){return u||'';}
 
 /* ══════════════════════════════════════════════════
-   IMAGE FALLBACK
-   Direct image loads can fail where an API call doesn't —
-   a mobile network intercepting the CDN, a private-relay
-   exit, a content blocker. Retry once through the proxy
-   if one exists, then leave the placeholder showing.
+   IMAGE ROUTING
+   Cover requests are checked against the Referer header
+   upstream: a mismatch returns a "read this at" placeholder
+   with a 200, so no error handler ever fires. Two defences:
 
-   Nothing here ever hides an element. The <img> sits at
-   opacity 0 until it loads, with the card placeholder
-   behind it, so a failure is already invisible.
+     1. referrerpolicy="no-referrer" on every <img>, plus a
+        page-level meta, so the request carries no referrer
+        at all rather than a wrong one.
+     2. when a proxy exists, route covers through it — the
+        request is then made server-side with no browser
+        referrer, which is what the original build relied on.
+
+   disp() picks the route; data-src always holds the raw URL
+   so imgFail() can fall back to the other one.
 ══════════════════════════════════════════════════ */
+function disp(u){
+  if(!u)return'';
+  return PROXY_BASE?proxyURL(u):u;
+}
 function imgFail(el){
   const orig=el.dataset.src||'';
-  if(el.dataset.tried!=='1'&&PROXY_BASE&&orig){
+  if(el.dataset.tried!=='1'&&orig){
     el.dataset.tried='1';
-    el.src=proxyURL(orig);
+    /* whichever route we started on, try the other */
+    const onProxy=PROXY_BASE&&el.src.indexOf(PROXY_BASE)===0;
+    el.src=onProxy?orig:(PROXY_BASE?proxyURL(orig):orig);
     return;
   }
   el.dataset.dead='1';
@@ -1332,7 +1344,7 @@ function card(it){
   return`<div class="card" data-vid="${esc(it.id)}" onclick="showDetail('${esc(it.id)}')" title="${esc(it.title)}">
     <div class="card-img">
       <span class="card-ph">📖</span>
-      ${it.cover?`<img src="${esc(it.cover)}" alt="" loading="lazy" data-src="${esc(it.cover)}" onload="imgOk(this)" onerror="imgFail(this)">`:''}
+      ${it.cover?`<img src="${esc(disp(it.cover))}" alt="" loading="lazy" data-src="${esc(it.cover)}" referrerpolicy="no-referrer" onload="imgOk(this)" onerror="imgFail(this)">`:''}
       ${isSaved(it.id)?'<div class="card-mark"><span class="badge b-new">SAVED</span></div>':''}
       ${it.rating&&it.rating!=='safe'&&it.rating!=='suggestive'?'<div class="card-mark" style="left:6px;right:auto"><span class="badge b-18">18+</span></div>':''}
     </div>
@@ -1345,7 +1357,7 @@ function card(it){
 function updRow(u){
   const n=u.chNum?`Ch. ${u.chNum}`:'Oneshot';
   return`<div class="row" onclick="openUpdate('${esc(u.src)}','${encodeURIComponent(u.rawMangaId||'')}','${encodeURIComponent(u.rawChId||'')}')">
-    <div class="row-th">${u.cover?`<img src="${esc(u.cover)}" loading="lazy" data-src="${esc(u.cover)}" onload="imgOk(this)" onerror="imgFail(this)">`:'📖'}</div>
+    <div class="row-th">${u.cover?`<img src="${esc(disp(u.cover))}" loading="lazy" data-src="${esc(u.cover)}" referrerpolicy="no-referrer" onload="imgOk(this)" onerror="imgFail(this)">`:'📖'}</div>
     <div class="row-body">
       <div class="row-title">${esc(u.title)}</div>
       <div class="row-sub">${esc(n)}${u.chTitle?' · '+esc(u.chTitle):''}</div>
@@ -1475,7 +1487,8 @@ function setHero(i){
   document.getElementById('hero-title').textContent=it.title;
   document.getElementById('hero-desc').textContent='';
   const img=document.getElementById('hero-img');
-  img.classList.remove('vis');img.onload=()=>img.classList.add('vis');img.src=it.cover;
+  img.classList.remove('vis');img.dataset.tried='';img.dataset.src=it.cover;
+  img.onload=()=>img.classList.add('vis');img.onerror=()=>imgFail(img);img.src=disp(it.cover);
   document.getElementById('hero-dots').innerHTML=heroItems.map((_,n)=>`<div class="hero-dot${n===i?' on':''}" onclick="setHero(${n})"></div>`).join('');
   document.getElementById('hero-read').onclick=()=>showDetail(it.id);
   document.getElementById('hero-more').onclick=()=>showDetail(it.id);
@@ -1526,7 +1539,7 @@ function renderLibShelf(rows){
     <button class="sa" onclick="checkLibraryUpdates(true)">Check again</button></div>
     <div class="rows" style="margin-bottom:34px">${live.map(r=>`
       <div class="row" onclick="openUpdate('${esc(String(r.mangaId).split(':')[0])}','${encodeURIComponent(rawOf(r.mangaId))}','${encodeURIComponent(r.latest.rawId)}')">
-        <div class="row-th">${r.mangaCover?`<img src="${esc(r.mangaCover)}" loading="lazy" data-src="${esc(r.mangaCover)}" onload="imgOk(this)" onerror="imgFail(this)">`:'📖'}</div>
+        <div class="row-th">${r.mangaCover?`<img src="${esc(disp(r.mangaCover))}" loading="lazy" data-src="${esc(r.mangaCover)}" referrerpolicy="no-referrer" onload="imgOk(this)" onerror="imgFail(this)">`:'📖'}</div>
         <div class="row-body">
           <div class="row-title">${esc(r.mangaTitle||'Untitled')}</div>
           <div class="row-sub">${r.unread} unread · latest Ch. ${esc(r.latest.num||'?')}</div>
@@ -1554,7 +1567,7 @@ function renderLibrary(){
     ?`<div class="sech" style="margin-bottom:10px"><span class="spine-label">${h.length} entries</span><button class="sa" onclick="clearHistory()">Clear history</button></div>
       <div class="rows">${h.map(x=>`
       <div class="row" onclick="openUpdate('${esc(String(x.mangaId).split(':')[0])}','${encodeURIComponent(rawOf(x.mangaId))}','${esc(x.chId)}')">
-        <div class="row-th">${x.mangaCover?`<img src="${esc(x.mangaCover)}" loading="lazy" data-src="${esc(x.mangaCover)}" onload="imgOk(this)" onerror="imgFail(this)">`:'📖'}</div>
+        <div class="row-th">${x.mangaCover?`<img src="${esc(disp(x.mangaCover))}" loading="lazy" data-src="${esc(x.mangaCover)}" referrerpolicy="no-referrer" onload="imgOk(this)" onerror="imgFail(this)">`:'📖'}</div>
         <div class="row-body">
           <div class="row-title">${esc(x.mangaTitle||'Untitled')}</div>
           <div class="row-sub mut">Ch. ${esc(x.chNum||'?')}</div>
@@ -1795,7 +1808,8 @@ async function renderDetail(id){
   document.title=shown+' · Inkflow';
   document.getElementById('dtt').textContent=shown;
   const cov=document.getElementById('dcv');
-  if(d.cover){cov.src=d.cover;cov.onload=()=>cov.classList.add('vis');}
+  if(d.cover){cov.dataset.tried='';cov.dataset.src=d.cover;
+    cov.onload=()=>cov.classList.add('vis');cov.onerror=()=>imgFail(cov);cov.src=disp(d.cover);}
   document.getElementById('dd').textContent=d.desc||'No description provided for this title.';
   document.getElementById('dmeta').innerHTML=
     kindBadge(d.lang)+
@@ -1829,7 +1843,7 @@ async function loadRelated(prov,d){
       <div class="card" onclick="showDetail('${esc(r.id)}')" title="${esc(r.title)}">
         <div class="card-img">
           <span class="card-ph">📖</span>
-          ${r.cover?`<img src="${esc(r.cover)}" alt="" loading="lazy" data-src="${esc(r.cover)}" onload="imgOk(this)" onerror="imgFail(this)">`:''}
+          ${r.cover?`<img src="${esc(disp(r.cover))}" alt="" loading="lazy" data-src="${esc(r.cover)}" referrerpolicy="no-referrer" onload="imgOk(this)" onerror="imgFail(this)">`:''}
         </div>
         <div>
           <div class="card-title">${esc(r.title)}</div>
@@ -1980,7 +1994,7 @@ function renderReader(){
   const sr=document.getElementById('sr'),pr=document.getElementById('pr');
   if(RS.mode==='scroll'){
     sr.style.display='flex';pr.style.display='none';
-    sr.innerHTML=pages.map((p,i)=>`<img class="spage" src="${esc(p)}" alt="Page ${i+1}" loading="lazy" data-src="${esc(p)}" onload="imgOk(this)" onerror="imgFail(this)">`).join('');
+    sr.innerHTML=pages.map((p,i)=>`<img class="spage" src="${esc(disp(p))}" alt="Page ${i+1}" loading="lazy" data-src="${esc(p)}" referrerpolicy="no-referrer" onload="imgOk(this)" onerror="imgFail(this)">`).join('');
     sweepImages(sr);
     if(curPg>0)setTimeout(()=>{const t=sr.children[curPg];if(t)t.scrollIntoView();},120);
   }else{
@@ -1988,7 +2002,7 @@ function renderReader(){
     showPage(curPg);
   }
 }
-function preload(i){[i+1,i+2,i+3].forEach(n=>{if(pages[n]){const im=new Image();im.src=pages[n];}});}
+function preload(i){[i+1,i+2,i+3].forEach(n=>{if(pages[n]){const im=new Image();im.referrerPolicy='no-referrer';im.src=disp(pages[n]);}});}
 function showPage(n){
   curPg=Math.max(0,Math.min(n,pages.length-1));
   const a=document.getElementById('pi-a'),b=document.getElementById('pi-b');
@@ -1998,7 +2012,7 @@ function showPage(n){
      poison every later page in the chapter */
   const put=(el,url)=>{
     el.classList.remove('vis');el.dataset.tried='';el.dataset.src=url;
-    el.style.display='';el.onload=()=>el.classList.add('vis');el.src=url;
+    el.style.display='';el.onload=()=>el.classList.add('vis');el.src=disp(url);
   };
   put(a,pages[curPg]);
   if(two&&pages[curPg+1])put(b,pages[curPg+1]);

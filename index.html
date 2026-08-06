@@ -903,7 +903,14 @@ let pages=[],curPg=0;
 let prevPage='home',hMode='popular',lMode='saved';
 let bOff=0,bGenreId='',typeFilter='';
 let sortAsc=false,tagMap={},denseGrid=false;
-let matureOn=!!localStorage.getItem('inkflow_mature');
+/* migrate the old boolean flag ('1') to the tri-state value.
+   inline literal, not MATURE_STATES — that const is declared
+   further down and would be in its temporal dead zone here */
+let matureMode=(()=>{
+  const v=localStorage.getItem('inkflow_mature');
+  if(v==='1')return'include';
+  return['off','include','only'].includes(v)?v:'off';
+})();
 let refreshTimer=null,libTimer=null,searchTimer=null,heroTimer=null;
 let heroItems=[],heroIdx=0;
 let bLoading=false,bDone=false,bObserver=null;
@@ -988,15 +995,50 @@ function hasTitle(x){
 }
 function norm(s){return String(s||'').toLowerCase().normalize('NFKC').replace(/[^\p{L}\p{N}]/gu,'').slice(0,40);}
 function dedup(arr){
-  const seen=new Set();
+  const seen=new Set(),known=emptySet();
   return(arr||[]).filter(i=>{
     if(!hasTitle(i))return false;
+    if(!readable(i,known))return false;
     const k=norm(i.title);
     if(!k||seen.has(k))return false;
     seen.add(k);return true;
   });
 }
 function esc(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ══════════════════════════════════════════════════
+   EMPTY-TITLE FILTERING
+   hasAvailableChapters=true counts chapters in any
+   language, and counts ones that are external links to
+   official readers — which chapters() correctly strips.
+   So titles pass the query and then render an empty list.
+
+   Two passes, both conservative: absence of evidence never
+   filters anything out.
+     1. signals already in the response
+     2. a remembered list of titles that actually came back
+        empty, expiring after a week in case they fill in
+══════════════════════════════════════════════════ */
+const EMPTY_TTL=7*24*60*60e3;
+function emptySet(){
+  const raw=LS.get('inkflow_empty',{});
+  const now=Date.now(),out={};
+  for(const k in raw)if(now-raw[k]<EMPTY_TTL)out[k]=raw[k];
+  return out;
+}
+function markEmpty(id){
+  const e=emptySet();e[id]=Date.now();LS.set('inkflow_empty',e);
+}
+function unmarkEmpty(id){
+  const e=emptySet();
+  if(e[id]){delete e[id];LS.set('inkflow_empty',e);}
+}
+function readable(x,known){
+  if(known[x.id])return false;                       /* opened before, was empty */
+  if(x.latest===null)return false;                   /* explicitly no chapters */
+  if(Array.isArray(x.langs)&&!x.langs.includes('en'))return false;  /* none in English */
+  return true;                                       /* unknown -> keep */
+}
 function rt(v){
   if(!v)return'';
   const d=Date.now()-new Date(v).getTime(),m=Math.floor(d/60000);
@@ -1057,7 +1099,15 @@ function toggleSrc(id){
 /* ══════════════════════════════════════════════════
    PROVIDER: MangaDex
 ══════════════════════════════════════════════════ */
-const MD_BASE='&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&availableTranslatedLanguage[]=en&hasAvailableChapters=true';
+const MD_CORE='&includes[]=cover_art&availableTranslatedLanguage[]=en&hasAvailableChapters=true';
+const MD_SAFE='&contentRating[]=safe&contentRating[]=suggestive';
+const MD_BASE=MD_CORE+MD_SAFE;
+/* off = safe+suggestive · include = adds erotica · only = erotica alone */
+function mdRatings(mode){
+  if(mode==='only')return'&contentRating[]=erotica';
+  if(mode==='include')return MD_SAFE+'&contentRating[]=erotica';
+  return MD_SAFE;
+}
 function mdLang(l){
   if(!l)return'';
   if(l==='zh')return'&originalLanguage[]=zh&originalLanguage[]=zh-hk';
@@ -1071,9 +1121,14 @@ function mdCov(m,sz='256'){
 /* no 'Unknown' fallback — blanks must stay blank so hasTitle() can drop them */
 function mdTit(m){const t=m.attributes?.title||{};return t.en||t['ja-ro']||t.ja||t.ko||Object.values(t)[0]||'';}
 function mdCard(m){
+  const a=m.attributes||{};
   return{id:'md:'+m.id,rawId:m.id,src:'md',title:mdTit(m),cover:mdCov(m,'512'),
-    lang:m.attributes?.originalLanguage,status:m.attributes?.status||'',
-    year:m.attributes?.year||'',rating:m.attributes?.contentRating||''};
+    lang:a.originalLanguage,status:a.status||'',
+    year:a.year||'',rating:a.contentRating||'',
+    /* both already ride along in the response — no extra requests.
+       langs is undefined on some payloads, so absence never filters. */
+    langs:a.availableTranslatedLanguage,
+    latest:a.latestUploadedChapter};
 }
 
 registerProvider({
@@ -1095,10 +1150,8 @@ registerProvider({
   },
 
   async browse({offset,tagId,lang,sort,status,demo,mature}){
-    let u=`${MDEX}/manga?limit=96&offset=${offset}${MD_BASE}${mdLang(lang)}&order[${sort||'followedCount'}]=desc`;
-    /* additive only, and only ever from the Browse tab — Featured,
-       Updates, search and the random button stay safe+suggestive */
-    if(mature)u+='&contentRating[]=erotica';
+    /* only Browse varies the rating; every other surface stays safe+suggestive */
+    let u=`${MDEX}/manga?limit=96&offset=${offset}${MD_CORE}${mdRatings(mature)}${mdLang(lang)}&order[${sort||'followedCount'}]=desc`;
     if(tagId)u+=`&includedTags[]=${tagId}`;
     if(status)u+=`&status[]=${status}`;
     if(demo)u+=`&publicationDemographic[]=${demo}`;
@@ -1474,21 +1527,28 @@ async function loadUpdates(){
 ══════════════════════════════════════════════════ */
 function browseOpts(){
   return{
-    offset:bOff,tagId:bGenreId,mature:matureOn,
+    offset:bOff,tagId:bGenreId,mature:matureMode,
     lang:document.getElementById('f-lang').value,
     sort:document.getElementById('f-sort').value,
     status:document.getElementById('f-status').value,
     demo:document.getElementById('f-demo').value
   };
 }
+const MATURE_STATES=['off','include','only'];
+const MATURE_LABEL={off:'Include mature',include:'Mature included',only:'Mature only'};
 function toggleMature(){
-  matureOn=!matureOn;
-  localStorage.setItem('inkflow_mature',matureOn?'1':'');
-  const b=document.getElementById('maturebtn');
-  b.classList.toggle('on',matureOn);
-  b.textContent=matureOn?'Mature included':'Include mature';
-  toast(matureOn?'Mature titles included in Browse only':'Mature titles hidden');
+  matureMode=MATURE_STATES[(MATURE_STATES.indexOf(matureMode)+1)%3];
+  localStorage.setItem('inkflow_mature',matureMode);
+  paintMature();
+  toast({off:'Mature titles hidden',
+         include:'Mature titles included in Browse',
+         only:'Showing mature titles only'}[matureMode]);
   loadBrowse();
+}
+function paintMature(){
+  const b=document.getElementById('maturebtn');
+  b.textContent=MATURE_LABEL[matureMode];
+  b.classList.toggle('on',matureMode!=='off');
 }
 async function loadBrowse(more=false){
   const g=document.getElementById('bg');
@@ -1496,9 +1556,12 @@ async function loadBrowse(more=false){
   if(bLoading||bDone)return;
   bLoading=true;
   document.getElementById('bsentinel').textContent='Loading…';
-  const items=dedup(await gather('browse',p=>p.browse(browseOpts())));
+  const rawItems=await gather('browse',p=>p.browse(browseOpts()));
+  const items=dedup(rawItems);
   if(!more)g.innerHTML='';
-  if(!items.length){
+  /* an empty page after filtering is not the end of the catalog —
+     only an empty raw response is */
+  if(!rawItems.length){
     bDone=true;
     document.getElementById('bsentinel').textContent=more?'End of results':'';
     if(!more){
@@ -1512,8 +1575,15 @@ async function loadBrowse(more=false){
     }
     bLoading=false;return;
   }
+  bOff+=96;
+  if(!items.length){
+    /* whole page was unreadable titles — skip ahead rather than stop */
+    bLoading=false;
+    document.getElementById('bsentinel').textContent='Skipping empty titles…';
+    return loadBrowse(true);
+  }
   g.insertAdjacentHTML('beforeend',items.map(card).join(''));
-  bOff+=96;bLoading=false;
+  bLoading=false;
   document.getElementById('bsentinel').textContent='';
 }
 function resetFilters(){
@@ -1626,6 +1696,8 @@ async function renderDetail(id){
     (d.tags||[]).map(t=>`<span class="badge b-mut">${esc(t)}</span>`).join('');
 
   curChapters=await prov.chapters(rawOf(id)).catch(()=>[]);
+  /* the only place we learn the truth — feed it back to the grids */
+  if(curChapters.length)unmarkEmpty(id);else markEmpty(id);
   document.getElementById('cht').textContent=`${curChapters.length} chapter${curChapters.length===1?'':'s'}`;
   renderChapters();renderSpine();renderDetailButtons();
   loadRelated(prov,d);
@@ -1964,10 +2036,7 @@ document.addEventListener('keydown',e=>{
     PROVIDERS.forEach(p=>{if(p.available&&typeof s[p.id]==='boolean')p.enabled=s[p.id];});
   }catch{}
   renderGenres();applyRS();
-  if(matureOn){
-    const b=document.getElementById('maturebtn');
-    b.classList.add('on');b.textContent='Mature included';
-  }
+  paintMature();
   handleRoute();
   loadHome();
 })();
